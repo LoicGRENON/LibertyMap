@@ -5,13 +5,13 @@ from BeautifulSoup import BeautifulSoup	# For processing HTML
 import re
 import os
 import sys
-import urllib
+import cookielib, urllib, urllib2
 
 def get_maps() :
-	map_no = {'row_start':0, 'col_start':0, 'file':'Maps/nord_ouest.html'}
-	map_ne = {'row_start':0, 'col_start':60, 'file':'Maps/nord_est.html'}
-	map_so = {'row_start':50, 'col_start':0, 'file':'Maps/sud_ouest.html'}
-	map_se = {'row_start':50, 'col_start':60, 'file':'Maps/sud_est.html'}	
+	map_no = {'row_start':0, 'col_start':0, 'map_id':'33', 'name':'Nord-Ouest'}
+	map_ne = {'row_start':0, 'col_start':60, 'map_id':'34', 'name':'Nord-Est'}
+	map_so = {'row_start':50, 'col_start':0, 'map_id':'35', 'name':'Sud-Ouest'}
+	map_se = {'row_start':50, 'col_start':60, 'map_id':'36', 'name':'Sud-Est'}
 	maps = [map_no, map_ne, map_so, map_se]
 
 	time_pattern = "\([0-9]*,[0-9]*\) : ([0-9]*)min"
@@ -19,16 +19,33 @@ def get_maps() :
 
 	img_list = []
 
+	# On crée la matrice qui contiendra les infos de la carte
 	grid = [[{'x_coord':col,'y_coord':row,'time':0, 'img':None, 'decor':None, 'is_passage':False} for col in range(121)] for row in range(139)]
-	for carte in maps :
-		print "Traitement du fichier %s" % str(carte['file'])
 
-		file = open(carte['file'], "r")
-		html = file.read()
-		file.close()
+	# On active le support des cookies pour urllib2
+	cookie_jar = cookielib.CookieJar()
+	cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
+	urlOpener = urllib2.build_opener(cookie_handler)
+	urllib2.install_opener(urlOpener)
+
+	# On s'identifie sur le site
+	params = urllib.urlencode({"user": "Falco", "pwd": "51516969"}) 
+	request = urllib2.Request("http://libertyisland.johndegey.org/index.php", params)
+	urlOpener.open(request)
+
+	for carte in maps :
+		print "Récupération de la carte %s" % str(carte['name'])
+
+		params = urllib.urlencode({"action": "showMap", "ajaxcall": "1", "anglais": "on", "espagnol": "on", "francais": "on", "hollandais": "on", "grillage": "on", "pirates": "on", "passage": "on", "pnj": "on", "pnjFixe": "on", "pnjPassif": "on", "pos": "", "selmap": "", "map": carte['map_id']})
+		request = urllib2.Request("http://libertyisland.johndegey.org//restricted/zones.php", params)
+		url = urlOpener.open(request)
+		html = url.read()
+
+		print "Traitement de la carte %s" % str(carte['name'])
+
 		soup = BeautifulSoup(html)
 
-		table = soup.find("table")
+		table = soup.find("table", {"class" : "cadre map"})
 
 		y_coord = carte['row_start']
 		for row in table.findAll("tr") :
@@ -74,7 +91,7 @@ def get_maps() :
 	# On vérifie qu'il n'y a pas de nouvelle image, dans le cas contraire, on la récupère
 	error = 0
 	for img in img_list :
-		path = '/home/loic/Programmation/Calculateur Trajet/media' + img
+		path = '/home/loic/Programmation/LibertyMap/media' + img
 		if not os.access(path, os.F_OK):
 			splited_path = os.path.split(path)
 			if not os.access(splited_path[0], os.F_OK) :

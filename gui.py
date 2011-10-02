@@ -51,7 +51,7 @@ class MainInterface :
 	def onActiveItem(self, widget, path) :
 		self.statusBar.addText(str(path[0]))
 
-	def onSelectionChange(self, widget)
+	def onSelectionChange(self, widget) :
 		# Griser la case sélectionnée et dégriser celle qui est déselectionnée
 		pass
 
@@ -68,19 +68,19 @@ class MainInterface :
 			for col in row :
 				gtk.gdk.threads_enter()
 				if col['img'] != None :
-					pixbuf = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/Calculateur Trajet/media" + col['img'])
+					pixbuf = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/LibertyMap/media" + col['img'])
 				else :
-					pixbuf = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/Calculateur Trajet/media/images/carregris.gif")
+					pixbuf = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/LibertyMap/media/images/carregris.gif")
 
 				# S'il y a un décor pour cette case, on l'affiche par dessus l'image de fond
 				pixbux_decor = None
 				if col['decor'] != None :
-					pixbuf_decor = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/Calculateur Trajet/media" + col['decor'])
+					pixbuf_decor = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/LibertyMap/media" + col['decor'])
 					pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col['is_passage'] :
-					pixbuf_passage = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/Calculateur Trajet/media/images/passage.gif")
+					pixbuf_passage = gtk.gdk.pixbuf_new_from_file("/home/loic/Programmation/LibertyMap/media/images/passage.gif")
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				coord = str(col['x_coord']) + "," + str(col['y_coord'])
