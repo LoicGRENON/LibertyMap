@@ -36,7 +36,7 @@ def get_maps() :
 	for carte in maps :
 		print "Récupération de la carte %s" % str(carte['name'])
 
-		params = urllib.urlencode({"action": "showMap", "ajaxcall": "1", "anglais": "on", "espagnol": "on", "francais": "on", "hollandais": "on", "grillage": "on", "pirates": "on", "passage": "on", "pnj": "on", "pnjFixe": "on", "pnjPassif": "on", "pos": "", "selmap": "", "map": carte['map_id']})
+		params = urllib.urlencode({"action": "showMap", "ajaxcall": "1", "anglais": "off", "espagnol": "off", "francais": "off", "hollandais": "off", "grillage": "off", "pirates": "off", "passage": "on", "pnj": "off", "pnjFixe": "off", "pnjPassif": "off", "pos": "", "selmap": "", "map": carte['map_id']})
 		request = urllib2.Request("http://libertyisland.johndegey.org//restricted/zones.php", params)
 		url = urlOpener.open(request)
 		html = url.read()
