@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import cookielib, urllib, urllib2
+from gui import LM_CACHE_PATH
 
 def get_maps() :
 	map_no = {'row_start':0, 'col_start':0, 'map_id':'33', 'name':'Nord-Ouest'}
@@ -91,7 +92,7 @@ def get_maps() :
 	# On vérifie qu'il n'y a pas de nouvelle image, dans le cas contraire, on la récupère
 	error = 0
 	for img in img_list :
-		path = '/home/loic/Programmation/LibertyMap/media' + img
+		path = LM_CACHE_PATH + '/media' + img
 		if not os.access(path, os.F_OK):
 			splited_path = os.path.split(path)
 			if not os.access(splited_path[0], os.F_OK) :
