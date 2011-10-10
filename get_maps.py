@@ -8,7 +8,11 @@ import sys
 import cookielib, urllib, urllib2
 from gui import LM_CACHE_PATH
 
-def get_maps() :
+def get_maps(login, password) :
+	if login == None or login == '' or password == None or password == '' :
+		print "Identifiants invalides"
+		return ''
+
 	map_no = {'row_start':0, 'col_start':0, 'map_id':'33', 'name':'Nord-Ouest'}
 	map_ne = {'row_start':0, 'col_start':60, 'map_id':'34', 'name':'Nord-Est'}
 	map_so = {'row_start':50, 'col_start':0, 'map_id':'35', 'name':'Sud-Ouest'}
@@ -30,7 +34,7 @@ def get_maps() :
 	urllib2.install_opener(urlOpener)
 
 	# On s'identifie sur le site
-	params = urllib.urlencode({"user": "Falco", "pwd": "51516969"}) 
+	params = urllib.urlencode({"user": login, "pwd": password}) 
 	request = urllib2.Request("http://libertyisland.johndegey.org/index.php", params)
 	urlOpener.open(request)
 
@@ -110,6 +114,3 @@ def get_maps() :
 		print "Il y eu au moins une erreur."
 
 	return grid
-
-if __name__ == '__main__' :
-	get_maps()

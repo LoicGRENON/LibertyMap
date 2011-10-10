@@ -131,7 +131,15 @@ class MainInterface :
 
 	def ShowMap(self) :
 		start_time = time.time()
-		map_info = get_maps.get_maps()
+		try :
+			login = self.config.config.get('borgne', 'login')
+		except :
+			login = None
+		try :
+			password = self.config.config.get('borgne', 'password')
+		except :
+			password = None
+		map_info = get_maps.get_maps(login, password)
 		get_map_time = time.time() - start_time
 		print "Durée de récupération des cartes : %f" % get_map_time
 
