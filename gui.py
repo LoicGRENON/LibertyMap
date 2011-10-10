@@ -43,6 +43,7 @@ class MainInterface :
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.connect("destroy", self.quit)
 		self.window.set_title('Calculateur de trajet')
+		self.window.set_default_size(800, 800)
 
 		vbox = gtk.VBox(False, True)
 		self.window.add(vbox)
@@ -86,8 +87,7 @@ class MainInterface :
 			time = self.grid.listStore.get_value(self.grid.listStore.get_iter(item[0]),0)
 			time = self.compute_effective_time(int(time))
 			path_time += time
-			print time
-		print path_time
+		self.statusBar.addText("Temps du trajet : "+str(path_time)+"mins")
 
 	def compute_effective_time(self, time) :
 		try :
@@ -178,20 +178,20 @@ class GridInterface :
 		iconview = gtk.IconView()
 		iconview.set_model(self.listStore)
 		iconview.set_tooltip_column(2)
-		iconview.set_pixbuf_column(1)
 		iconview.set_columns(121)
 		iconview.set_margin(0)
 		iconview.set_spacing(0)
 		iconview.set_row_spacing(0)
 		iconview.set_column_spacing(0)
-		iconview.set_item_padding(1)
+		iconview.set_item_padding(0)
 		iconview.set_selection_mode(gtk.SELECTION_MULTIPLE)
 		self.iconview = iconview
 		iconview.props.has_tooltip = True
 
-#		iconview.connect("cursor-changed", self.onCursorChanged, data)
-#		iconview.connect("row-activated", self.onActiveRow, data)
-#		iconview.connect("query-tooltip", self.on_query_tooltip)
+		renderer = gtk.CellRendererPixbuf()
+		renderer.set_property('follow-state', True)
+		iconview.pack_start(renderer)
+		iconview.set_attributes(renderer,pixbuf=1)
     
 		scroll_bar.add(iconview)
 
