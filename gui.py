@@ -56,11 +56,16 @@ class MainInterface :
 		self.grid = GridInterface(self)
 		self.grid.iconview.connect("item-activated", self.onActiveItem)
 		self.grid.iconview.connect("selection-changed", self.onSelectionChange)
+		self.grid.iconview.connect("button-press-event", self.onButtonPressEvent)
 		vbox.pack_start(self.grid.gridBox, True, True)
 
 		# Barre d'état
 		self.statusBar = StatusBarInterface(self)
 		vbox.pack_start(self.statusBar.status_bar, False, False, 0)
+
+		# Menu clic droit
+		self.popup_menu = PopupMenu(self)
+		self.popup_menu = self.popup_menu.popup_menu
 
 		self.window.show_all()
 
@@ -76,6 +81,19 @@ class MainInterface :
 
 	def onActiveItem(self, widget, path) :
 		self.statusBar.addText(str(path[0]))
+
+	def onButtonPressEvent(self, iconview, event):
+		if event.button == 3:
+			x = int(event.x)
+			y = int(event.y)
+			pthinfo = iconview.get_item_at_pos(x, y)
+			if pthinfo is not None:
+				path, renderer = pthinfo
+				iconview.grab_focus()
+				iconview.set_cursor(path, renderer)
+				iconview.select_path(path)
+				self.popup_menu.popup(None, None, None, event.button, event.time)
+			return True
 
 	def onSelectionChange(self, widget) :
 		# Griser la case sélectionnée et dégriser celle qui est déselectionnée
@@ -214,6 +232,12 @@ class MainInterface :
 		show_map_time = time.time() - start_time
 		print "Durée d'affichage de la carte : %f" % show_map_time
 
+	def onChangeStartPos(self, widget, data=None) :
+		print "Changement des coordonnées de départ"
+
+	def onChangeEndPos(self, widget, data=None) :
+		print "Changement des coordonnées d'arrivée"
+
 class GridInterface :
 
 	scroll_bar, iconview, listStore = None, None, None
@@ -244,6 +268,21 @@ class GridInterface :
 		iconview.set_attributes(renderer,pixbuf=1)
     
 		scroll_bar.add(iconview)
+
+class PopupMenu :
+
+	def __init__(self, data) :
+		self.popup_menu = gtk.Menu()
+
+		popup_item = gtk.MenuItem("Départ")
+		popup_item.show()
+		popup_item.connect("activate", data.onChangeStartPos)
+		self.popup_menu.append(popup_item)
+
+		popup_item = gtk.MenuItem("Arrivée")
+		popup_item.show()
+		popup_item.connect("activate", data.onChangeEndPos)
+		self.popup_menu.append(popup_item)
 
 class MenuInterface :
   
