@@ -234,6 +234,7 @@ class GridInterface :
 		iconview.set_column_spacing(0)
 		iconview.set_item_padding(0)
 		iconview.set_selection_mode(gtk.SELECTION_MULTIPLE)
+		iconview.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse("#000000"))
 		self.iconview = iconview
 		iconview.props.has_tooltip = True
 
