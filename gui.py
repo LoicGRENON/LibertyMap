@@ -129,6 +129,47 @@ class MainInterface :
 
 		return time
 
+	def CreateWayPixbuf(self) :
+		xpmdata = [
+			"32 32 2 1",
+			"       c None",
+			".      c #FF0000",
+			"................................",
+			"................................",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"..                            ..",
+			"................................",
+			"................................"
+			]
+
+		return gtk.gdk.pixbuf_new_from_xpm_data(xpmdata)
+
 	def ShowMap(self) :
 		start_time = time.time()
 		try :
@@ -144,6 +185,7 @@ class MainInterface :
 		print "Durée de récupération des cartes : %f" % get_map_time
 
 		start_time = time.time()
+		pixbuf_passage = self.CreateWayPixbuf()
 		i = 0
 		for row in map_info :
 			j = 0
@@ -162,7 +204,6 @@ class MainInterface :
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col['is_passage'] :
-					pixbuf_passage = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media/images/passage.gif")
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				coord = str(col['x_coord']) + "," + str(col['y_coord'])
