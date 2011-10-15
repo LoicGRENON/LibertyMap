@@ -51,6 +51,10 @@ class MainInterface :
 		# Barre de menu
 		self.menu = MenuInterface(self)
 		vbox.pack_start(self.menu.menu_bar, False, True)
+		
+		# Toolbar
+		self.tool_bar = ToolBarInterface(self)
+		vbox.pack_start(self.tool_bar.tool_bar, False, True)
 
 		# Grille
 		self.grid = GridInterface(self)
@@ -95,6 +99,18 @@ class MainInterface :
 				self.popup_menu.popup(None, None, None, event.button, event.time)
 			return True
 
+		if event.button == 1:
+			x = int(event.x)
+			y = int(event.y)
+			pthinfo = iconview.get_item_at_pos(x, y)
+			if pthinfo is not None:
+				path, renderer = pthinfo
+				if iconview.path_is_selected(path) :
+					iconview.unselect_path(path)
+				else :
+					iconview.select_path(path)
+			return True
+
 	def onSelectionChange(self, widget) :
 		# Griser la case sélectionnée et dégriser celle qui est déselectionnée
 		# Utiliser la fonction Gtk::TreeSelection::set_select_function()
@@ -106,6 +122,15 @@ class MainInterface :
 			time = self.compute_effective_time(int(time))
 			path_time += time
 		self.statusBar.addText("Temps du trajet : "+str(path_time)+"mins")
+
+	def CalcPath_cb(self, widget) :
+		pass
+
+	def ClearPath_cb(self, widget) :
+		self.grid.iconview.unselect_all()
+
+	def Prefs_cb(self, widget) :
+		pass
 
 	def compute_effective_time(self, time) :
 		try :
@@ -318,6 +343,31 @@ class MenuInterface :
 		menu.append(menu_item)
 
 		data.window.add_accel_group(accel)
+
+class ToolBarInterface :
+
+	tool_bar = None
+
+	def __init__(self, data) :
+		self.tool_bar = gtk.Toolbar()
+		self.tool_bar.set_style(gtk.TOOLBAR_BOTH)
+
+		path_calc_b = gtk.ToolButton(gtk.STOCK_EXECUTE)
+		path_calc_b.set_label("Calculer")
+		path_calc_b.set_tooltip_text("Calculer le trajet")
+		path_calc_b.connect("clicked", data.CalcPath_cb)
+		self.tool_bar.insert(path_calc_b, 0)
+
+		clear_path_b = gtk.ToolButton(gtk.STOCK_DELETE)
+		clear_path_b.set_label("Effacer")
+		clear_path_b.set_tooltip_text("Effacer le trajet courant")
+		clear_path_b.connect("clicked", data.ClearPath_cb)
+		self.tool_bar.insert(clear_path_b, 1)
+
+		prefs_b = gtk.ToolButton(gtk.STOCK_PREFERENCES)
+		prefs_b.set_tooltip_text("Modifier les préférences")
+		prefs_b.connect("clicked", data.Prefs_cb)
+		self.tool_bar.insert(prefs_b, 2)
 
 class About :
 	"Fenêtre about"
