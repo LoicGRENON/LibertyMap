@@ -130,7 +130,8 @@ class MainInterface :
 		self.grid.iconview.unselect_all()
 
 	def Prefs_cb(self, widget) :
-		pass
+		pref_window = PrefsInterface(self.window, self.config)
+		pref_window.window.show()
 
 	def compute_effective_time(self, time) :
 		try :
@@ -420,6 +421,119 @@ class Config :
 	def write(self) :
 		self.config.write(open(LM_CONF, 'wb'))
 
+class PrefsInterface :
+
+	def __init__(self, parent, config) :
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_title('Préférences')
+		self.window.set_default_size(400, 200)
+		self.window.set_transient_for(parent)
+		self.window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+
+		main_vbox = gtk.VBox(False)
+		self.window.add(main_vbox)
+
+		notebook = gtk.Notebook()
+		main_vbox.pack_start(notebook)
+
+		vbox = gtk.VBox(False)
+
+		label = gtk.Label("Login")
+		label.set_alignment(0,0.5)
+		vbox.pack_start(label, False)
+		self.login = gtk.Entry()
+		try :
+			conf_value = config.config.get('borgne', 'login')
+		except :
+			conf_value = ''
+		self.login.set_text(conf_value)
+		vbox.pack_start(self.login, False)
+
+		label = gtk.Label("Password")
+		label.set_alignment(0,0.5)
+		vbox.pack_start(label, False)
+		self.password = gtk.Entry()
+		self.password.set_visibility(False)
+		try :
+			conf_value = config.config.get('borgne', 'password')
+		except :
+			conf_value = ''
+		self.password.set_text(conf_value)
+		vbox.pack_start(self.password, False)
+
+		label = gtk.Label("Borgne")
+		notebook.append_page(vbox, label)
+
+		vbox = gtk.VBox(False)
+
+		self.talt_rodeur_btn = gtk.CheckButton("Rodeur")
+		try :
+			conf_value = config.config.getboolean('talents', 'rodeur')
+		except :
+			conf_value = False
+		self.talt_rodeur_btn.set_active(conf_value)
+		vbox.pack_start(self.talt_rodeur_btn , False)
+
+		self.talt_grimpeur_btn = gtk.CheckButton("Grimpeur")
+		try :
+			conf_value = config.config.getboolean('talents', 'grimpeur')
+		except :
+			conf_value = False
+		self.talt_grimpeur_btn.set_active(conf_value)
+		vbox.pack_start(self.talt_grimpeur_btn , False)
+
+		self.talt_aventurier_btn = gtk.CheckButton("Aventurier")
+		try :
+			conf_value = config.config.getboolean('talents', 'aventurier')
+		except :
+			conf_value = False
+		self.talt_aventurier_btn.set_active(conf_value)
+		vbox.pack_start(self.talt_aventurier_btn , False)
+
+		self.talt_randonneur_btn = gtk.CheckButton("Randonneur")
+		try :
+			conf_value = config.config.getboolean('talents', 'randonneur')
+		except :
+			conf_value = False
+		self.talt_randonneur_btn.set_active(conf_value)
+		vbox.pack_start(self.talt_randonneur_btn , False)
+
+		vbox_reduc = gtk.VBox(False)
+		label = gtk.Label("Réduction déplacement")
+		label.set_alignment(0,0.5)
+		vbox_reduc.pack_start(label, False)
+		self.reduc_depl = gtk.SpinButton()
+		self.reduc_depl.set_numeric(True)
+		self.reduc_depl.set_range(0, 20)
+		self.reduc_depl.set_increments(1, 1)
+		self.reduc_depl.set_wrap(True)
+		self.reduc_depl.set_snap_to_ticks(True)
+		try :
+			conf_value = config.config.getint('talents', 'reduc_deplacement')
+		except :
+			conf_value = 0
+		self.reduc_depl.set_value(conf_value)
+		vbox_reduc.pack_start(self.reduc_depl , False)
+		vbox.pack_start(vbox_reduc, False)
+
+		label = gtk.Label("Talents")
+		notebook.append_page(vbox, label)
+
+		button_box = gtk.HButtonBox()
+		button_box.set_layout(gtk.BUTTONBOX_END)
+		button_box.set_spacing(20)
+		main_vbox.pack_start(button_box)
+
+		button = gtk.Button(stock=gtk.STOCK_OK)
+		button_box.add(button)
+
+		button = gtk.Button(stock=gtk.STOCK_CANCEL)
+		button_box.add(button)
+
+		
+
+		self.window.show_all()
+		
 def main() :
 	config = Config()
 	t = MainInterface(config)
