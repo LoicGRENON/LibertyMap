@@ -131,7 +131,6 @@ class MainInterface :
 
 	def Prefs_cb(self, widget) :
 		pref_window = PrefsInterface(self.window, self.config)
-		pref_window.window.show()
 
 	def compute_effective_time(self, time) :
 		try :
@@ -417,7 +416,7 @@ class Config :
 			self.write()
 		else :
 			self.config.read(LM_CONF)
-  
+
 	def write(self) :
 		self.config.write(open(LM_CONF, 'wb'))
 
@@ -525,15 +524,40 @@ class PrefsInterface :
 		main_vbox.pack_start(button_box)
 
 		button = gtk.Button(stock=gtk.STOCK_OK)
+		button.connect("clicked", self.update, config)
 		button_box.add(button)
 
 		button = gtk.Button(stock=gtk.STOCK_CANCEL)
+		button.connect("clicked", self.close)
 		button_box.add(button)
 
-		
-
 		self.window.show_all()
-		
+
+	def close(self, button) :
+		self.window.destroy()
+
+	def update(self, button, config) :
+		if not config.config.has_section("borgne") :
+			config.config.add_section("borgne")
+
+		config.config.set("borgne", "login", self.login.get_text())
+		config.config.set("borgne", "password", self.password.get_text())
+
+		if not config.config.has_section("talents") :
+			config.config.add_section("talents")
+
+		config.config.set("talents", "rodeur", self.talt_rodeur_btn.get_active())
+		config.config.set("talents", "grimpeur", self.talt_grimpeur_btn.get_active())
+		config.config.set("talents", "aventurier", self.talt_aventurier_btn.get_active())
+		config.config.set("talents", "randonneur", self.talt_randonneur_btn.get_active())
+		config.config.set("talents", "reduc_deplacement", int(self.reduc_depl.get_value()))
+		config.write()
+
+		# On charge la nouvelle configuration
+		config.config.read(LM_CONF)
+
+		self.window.destroy()
+
 def main() :
 	config = Config()
 	t = MainInterface(config)
