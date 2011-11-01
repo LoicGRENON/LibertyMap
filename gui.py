@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Gtk
-import gtk
+import gtk, gobject
 
 import thread
 
@@ -13,6 +13,8 @@ import time
 import os
 # parseur de config valeur-cle
 import ConfigParser
+
+import astar
 
 LM_DIRNAME = 'LibertyMap'
 
@@ -39,6 +41,11 @@ class MainInterface :
 
 	def __init__(self, config) :
 		self.config = config
+		self.graph = []
+		self.start_x = 0
+		self.start_y = 0
+		self.end_x = 0
+		self.end_y = 0
 		print 'Initialisation de la fenêtre principale...'
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.connect("destroy", self.quit)
@@ -70,6 +77,7 @@ class MainInterface :
 		# Menu clic droit
 		self.popup_menu = PopupMenu(self)
 		self.popup_menu = self.popup_menu.popup_menu
+		self.popup_menu.attach_to_widget(self.grid.iconview, None)
 
 		self.window.show_all()
 
@@ -112,9 +120,6 @@ class MainInterface :
 			return True
 
 	def onSelectionChange(self, widget) :
-		# Griser la case sélectionnée et dégriser celle qui est déselectionnée
-		# Utiliser la fonction Gtk::TreeSelection::set_select_function()
-		# Ou modifier la propriété selection-box-alpha, si possible
 		selected_items = widget.get_selected_items()
 		path_time = 0
 		for item in selected_items :
@@ -124,7 +129,13 @@ class MainInterface :
 		self.statusBar.addText("Temps du trajet : "+str(path_time)+"mins")
 
 	def CalcPath_cb(self, widget) :
-		pass
+		algo = astar.PathFinder(self.graph, self.start_x, self.start_y, self.end_x, self.end_y)
+		start_time = time.time()
+		path = algo.findPath()
+		get_path_time = time.time() - start_time
+		print "Durée de recherche : %f" % get_path_time
+		for node in path :
+			print "(%i,%i)" % (node.x,node.y)
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
@@ -223,17 +234,19 @@ class MainInterface :
 			password = self.config.config.get('borgne', 'password')
 		except :
 			password = None
-		map_info = get_maps.get_maps(login, password)
+		self.graph = get_maps.get_maps(login, password)
 		get_map_time = time.time() - start_time
 		print "Durée de récupération des cartes : %f" % get_map_time
 
 		start_time = time.time()
 		pixbuf_passage = self.CreateWayPixbuf()
 		i = 0
-		for row in map_info :
+		for row in self.graph :
 			j = 0
 			for col in row :
 				gtk.gdk.threads_enter()
+				passage = False
+
 				if col['img'] != None :
 					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col['img'])
 				else :
@@ -247,21 +260,38 @@ class MainInterface :
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col['is_passage'] :
+					passage = True
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				coord = str(col['x_coord']) + "," + str(col['y_coord'])
 				tooltip = coord + " (" + str(col['time']) + " mins)"
-				self.grid.listStore.append([col['time'],pixbuf,tooltip])
+				self.grid.listStore.append([col['time'],pixbuf,tooltip, int(col['x_coord']), int(col['y_coord'])])
 				gtk.gdk.threads_leave()
 
 		show_map_time = time.time() - start_time
 		print "Durée d'affichage de la carte : %f" % show_map_time
 
 	def onChangeStartPos(self, widget, data=None) :
-		print "Changement des coordonnées de départ"
+		iconview = widget.get_parent().get_attach_widget()
+		liststore = iconview.get_model()
+		path = iconview.get_cursor()[0]
+		x_coord = liststore.get_value(liststore.get_iter(path), 3)
+		y_coord = liststore.get_value(liststore.get_iter(path), 4)
+		print "Changement des coordonnées de départ : (%i, %i)" % (x_coord, y_coord)
+		self.start_x = x_coord
+		self.start_y = y_coord
+		#self.startPos = astar.Node(x_coord, y_coord, None, time)
 
 	def onChangeEndPos(self, widget, data=None) :
-		print "Changement des coordonnées d'arrivée"
+		iconview = widget.get_parent().get_attach_widget()
+		liststore = iconview.get_model()
+		path = iconview.get_cursor()[0]
+		x_coord = liststore.get_value(liststore.get_iter(path), 3)
+		y_coord = liststore.get_value(liststore.get_iter(path), 4)
+		print "Changement des coordonnées d'arrivée : (%i, %i)" % (x_coord, y_coord)
+		self.end_x = x_coord
+		self.end_y = y_coord
+		#self.endPos = astar.Node(x_coord, y_coord, None, time)
 
 class GridInterface :
 
@@ -271,8 +301,8 @@ class GridInterface :
 		scroll_bar = gtk.ScrolledWindow()
 		scroll_bar.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		self.gridBox = scroll_bar
-
-		self.listStore = gtk.ListStore(str, gtk.gdk.Pixbuf, str)
+		# ListStore columns : time, pixbuf, tooltip, x_coord, y_coord, passage
+		self.listStore = gtk.ListStore(gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
 		iconview = gtk.IconView()
 		iconview.set_model(self.listStore)
 		iconview.set_tooltip_column(2)
