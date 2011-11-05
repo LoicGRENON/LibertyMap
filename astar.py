@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import heapq
-import math
 
 class Node :
 	'''
 	A class representing a tile of the course
 	'''
-	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False, visited=False):
+	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False):
 		self.x = x
 		self.y = y
 		self.parent = parent
@@ -17,7 +16,8 @@ class Node :
 		self.f = f
 		self.walkable = walkable
 		self.passage = passage
-		self.visited = visited
+		self.visited = False
+		self.closed = False
 
 
 class PathFinder :
@@ -28,7 +28,6 @@ class PathFinder :
 		self.y_start = y_start
 		self.x_end = x_end
 		self.y_end = y_end
-		self.closeSet = set()
 
 	def getNodeFromGraph(self, abscisse, ordonnee):
 		x_coord = int(self.graph[ordonnee][abscisse]['x_coord'])
@@ -110,12 +109,6 @@ class PathFinder :
 
 		return neighbours
 
-	def isOnCloseSet(self, node):
-		if node in self.closeSet :
-			return True
-		else :
-			return False
-
 	def findPath(self):
 		path = []
 
@@ -134,7 +127,7 @@ class PathFinder :
 			score, curNode = heapq.heappop(openList)
 			print "Noeud courant : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s" % (curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
 
-			self.closeSet.add(curNode)
+			curNode.closed = True
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.x == self.x_end and curNode.y == self.y_end :
@@ -147,7 +140,7 @@ class PathFinder :
 			min_cost = min(neighbours, key=lambda node:node.g)
 			for neighbour in neighbours :
 				# Si le noeud est dans la liste fermée ou que c'est un obstacle => on l'ignore et on passe au suivant
-				if (neighbour in self.closeSet) or not neighbour.walkable :
+				if neighbour.closed or not neighbour.walkable :
 					continue
 
 				# Si le noeud parent est un changement de zone, alors le cout de la case courante est nul
