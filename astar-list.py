@@ -1,14 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import heapq
 import math
 
 class Node :
 	'''
 	A class representing a tile of the course
 	'''
-	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False, visited=False):
+	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False):
 		self.x = x
 		self.y = y
 		self.parent = parent
@@ -17,7 +16,6 @@ class Node :
 		self.f = f
 		self.walkable = walkable
 		self.passage = passage
-		self.visited = visited
 
 
 class PathFinder :
@@ -28,7 +26,19 @@ class PathFinder :
 		self.y_start = y_start
 		self.x_end = x_end
 		self.y_end = y_end
+		self.openSet = set()
 		self.closeSet = set()
+
+	def addToCloseSet(self, node):
+		self.openSet.discard(node)
+		self.closeSet.add(node)
+
+	def addToOpenSet(self, node):
+		#self.closeSet.discard(node)
+		self.openSet.add(node)
+
+	def getCurrentNode(self):
+		return min(self.openSet, key=lambda node:node.f)
 
 	def getNodeFromGraph(self, abscisse, ordonnee):
 		x_coord = int(self.graph[ordonnee][abscisse]['x_coord'])
@@ -116,6 +126,12 @@ class PathFinder :
 		else :
 			return False
 
+	def isOnOpenSet(self, node):
+		if node in self.openSet :
+			return True
+		else :
+			return False
+
 	def findPath(self):
 		path = []
 
@@ -126,15 +142,14 @@ class PathFinder :
 			retracePath(c.parent)
 
 		curNode = self.getNodeFromGraph(self.x_start, self.y_start)
-		openList = [(-1, curNode)]
-		heapq.heapify(openList)
-
-		while openList :
+		curNode.g = 0
+		self.addToOpenSet(curNode)
+		while len(self.openSet) :
 			# On va chercher le noeud avec le plus petit score F. Ça sera notre noeud courant
-			score, curNode = heapq.heappop(openList)
+			curNode = self.getCurrentNode()
 			print "Noeud courant : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s" % (curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
 
-			self.closeSet.add(curNode)
+			self.addToCloseSet(curNode)
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.x == self.x_end and curNode.y == self.y_end :
@@ -160,7 +175,7 @@ class PathFinder :
 					newH *= min_cost.g
 				newF = newG + newH
 
-				if neighbour.visited :
+				if neighbour in self.openSet:
 					if newG < neighbour.g :
 						neighbour.parent = curNode
 						neighbour.g = newG
@@ -172,7 +187,7 @@ class PathFinder :
 					neighbour.g = newG
 					neighbour.h = newH
 					neighbour.f = newF
-					heapq.heappush(openList, (neighbour.f, neighbour))
-					neighbour.visited = True
+					self.addToOpenSet(neighbour)
+
 		
 		return path
