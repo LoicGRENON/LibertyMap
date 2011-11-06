@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
+import logging
 
 class Node :
 	'''
@@ -28,6 +29,13 @@ class PathFinder :
 		self.y_end = y_end
 		self.openSet = set()
 		self.closeSet = set()
+
+		logging.basicConfig(
+			filename='debug.log',
+			level=logging.DEBUG,
+			format='%(asctime)s %(levelname)s - %(message)s',
+			datefmt='%d/%m/%Y %H:%M:%S',
+			)
 
 	def addToCloseSet(self, node):
 		self.openSet.discard(node)
@@ -147,7 +155,7 @@ class PathFinder :
 		while len(self.openSet) :
 			# On va chercher le noeud avec le plus petit score F. Ça sera notre noeud courant
 			curNode = self.getCurrentNode()
-			print "Noeud courant : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s" % (curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
+			logging.debug("Noeud courant : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s", curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
 
 			self.addToCloseSet(curNode)
 
@@ -181,9 +189,10 @@ class PathFinder :
 						neighbour.g = newG
 						neighbour.h = newH
 						neighbour.f = newF
+						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, newG, newH)
 				else :
 					neighbour.parent = curNode
-					print "(%i,%i) - G : %i - H : %i" % (neighbour.x, neighbour.y, newG, newH)
+					logging.debug("%s (%i,%i) - G : %i - H : %i - in openSet : No", neighbour, neighbour.x, neighbour.y, newG, newH)
 					neighbour.g = newG
 					neighbour.h = newH
 					neighbour.f = newF
