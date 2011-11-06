@@ -8,7 +8,7 @@ class Node :
 	'''
 	A class representing a tile of the course
 	'''
-	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False):
+	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False, time=100, img_base=None, img_decor=None):
 		self.x = x
 		self.y = y
 		self.parent = parent
@@ -17,6 +17,9 @@ class Node :
 		self.f = f
 		self.walkable = walkable
 		self.passage = passage
+		self.time = time
+		self.img_base = img_base
+		self.img_decor = img_decor
 
 
 class PathFinder :
@@ -49,16 +52,18 @@ class PathFinder :
 		return min(self.openSet, key=lambda node:node.f)
 
 	def getNodeFromGraph(self, abscisse, ordonnee):
-		x_coord = int(self.graph[ordonnee][abscisse]['x_coord'])
-		y_coord = int(self.graph[ordonnee][abscisse]['y_coord'])
+#		x_coord = int(self.graph[ordonnee][abscisse]['x_coord'])
+#		y_coord = int(self.graph[ordonnee][abscisse]['y_coord'])
 
-		node = Node(x_coord, y_coord)
-		node.g = int(self.graph[ordonnee][abscisse]['time'])
+#		node = Node(x_coord, y_coord)
+#		node.g = int(self.graph[ordonnee][abscisse]['time'])
+
+		node = self.graph[ordonnee][abscisse]
 
 		if node.g == 100 :
 			node.walkable = False
 
-		node.passage = self.graph[ordonnee][abscisse]['is_passage']
+#		node.passage = self.graph[ordonnee][abscisse]['is_passage']
 		if node.passage :
 			node.g = 0
 
@@ -192,7 +197,7 @@ class PathFinder :
 						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, newG, newH)
 				else :
 					neighbour.parent = curNode
-					logging.debug("%s (%i,%i) - G : %i - H : %i - in openSet : No", neighbour, neighbour.x, neighbour.y, newG, newH)
+					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, newG, newH)
 					neighbour.g = newG
 					neighbour.h = newH
 					neighbour.f = newF

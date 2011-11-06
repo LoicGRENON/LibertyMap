@@ -6,6 +6,7 @@ import re
 import os
 import sys
 import cookielib, urllib, urllib2
+import astar
 from gui import LM_CACHE_PATH
 
 def get_maps(login, password) :
@@ -25,7 +26,7 @@ def get_maps(login, password) :
 	img_list = []
 
 	# On crée la matrice qui contiendra les infos de la carte
-	grid = [[{'x_coord':col,'y_coord':row,'time':0, 'img':None, 'decor':None, 'is_passage':False} for col in range(121)] for row in range(139)]
+	grid = [[astar.Node(col, row) for col in range(121)] for row in range(139)]
 
 	# On active le support des cookies pour urllib2
 	cookie_jar = cookielib.CookieJar()
@@ -62,7 +63,7 @@ def get_maps(login, password) :
 					time = None
 		
 				if time != None and len(time) :
-					time = time[0]
+					time = int(time[0])
 				else :
 					time = 100
 		
@@ -83,9 +84,7 @@ def get_maps(login, password) :
 					is_passage = False
 
 				try :
-					#if grid[x_coord][y_coord] == {0, None} :
-					grid[y_coord][x_coord] = {'x_coord':x_coord,'y_coord':y_coord,'time':str(time), 'img':str(img["src"]), 'decor':decor, 'is_passage':is_passage}
-
+					grid[y_coord][x_coord] = astar.Node(x_coord, y_coord, time = time, img_base = str(img["src"]), img_decor = decor, passage = is_passage)
 				except IndexError :
 					print "Index Error : x_coord = %i, y_coord = %i" % (x_coord,y_coord)
 					break

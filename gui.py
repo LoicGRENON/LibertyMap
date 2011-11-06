@@ -244,28 +244,30 @@ class MainInterface :
 		for row in self.graph :
 			j = 0
 			for col in row :
+				# col is an astar.Node instance
+
 				gtk.gdk.threads_enter()
 				passage = False
 
-				if col['img'] != None :
-					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col['img'])
+				if col.img_base != None :
+					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col.img_base)
 				else :
 					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media/images/carregris.gif")
 
 				# S'il y a un décor pour cette case, on l'affiche par dessus l'image de fond
 				pixbux_decor = None
-				if col['decor'] != None :
-					pixbuf_decor = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col['decor'])
+				if col.img_decor != None :
+					pixbuf_decor = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col.img_decor)
 					pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				# Si la case est un changement de zone, on modifie son apparence
-				if col['is_passage'] :
+				if col.passage :
 					passage = True
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
-				coord = str(col['x_coord']) + "," + str(col['y_coord'])
-				tooltip = coord + " (" + str(col['time']) + " mins)"
-				self.grid.listStore.append([col['time'],pixbuf,tooltip, int(col['x_coord']), int(col['y_coord'])])
+				coord = str(col.x) + "," + str(col.y)
+				tooltip = coord + " (" + str(col.time) + " mins)"
+				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])
 				gtk.gdk.threads_leave()
 
 		show_map_time = time.time() - start_time
