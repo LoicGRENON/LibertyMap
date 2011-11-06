@@ -172,7 +172,6 @@ class PathFinder :
 
 			# On récupère les voisins du noeud courant
 			neighbours = self.getNeighbours(curNode)
-			min_cost = min(neighbours, key=lambda node:node.g)
 			for neighbour in neighbours :
 				# Si le noeud est dans la liste fermée ou que c'est un obstacle => on l'ignore et on passe au suivant
 				if (neighbour in self.closeSet) or not neighbour.walkable :
@@ -184,8 +183,6 @@ class PathFinder :
 
 				newG = neighbour.parent.g + neighbour.g
 				newH = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
-				if min_cost.g :
-					newH *= min_cost.g
 				newF = newG + newH
 
 				if neighbour in self.openSet:
