@@ -16,6 +16,8 @@ import ConfigParser
 
 import astar
 
+import copy
+
 LM_DIRNAME = 'LibertyMap'
 
 # Emplacements dépendants de l'OS
@@ -129,7 +131,8 @@ class MainInterface :
 		self.statusBar.addText("Temps du trajet : "+str(path_time)+"mins")
 
 	def CalcPath_cb(self, widget) :
-		algo = astar.PathFinder(self.graph, self.start_x, self.start_y, self.end_x, self.end_y)
+		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
+		algo = astar.PathFinder(graph, self.start_x, self.start_y, self.end_x, self.end_y)
 		start_time = time.time()
 		path = algo.findPath()
 		get_path_time = time.time() - start_time

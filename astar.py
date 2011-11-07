@@ -52,20 +52,15 @@ class PathFinder :
 		return min(self.openSet, key=lambda node:node.f)
 
 	def getNodeFromGraph(self, abscisse, ordonnee):
-#		x_coord = int(self.graph[ordonnee][abscisse]['x_coord'])
-#		y_coord = int(self.graph[ordonnee][abscisse]['y_coord'])
-
-#		node = Node(x_coord, y_coord)
-#		node.g = int(self.graph[ordonnee][abscisse]['time'])
-
 		node = self.graph[ordonnee][abscisse]
 
-		if node.g == 100 :
+		if node.time == 100 :
 			node.walkable = False
 
-#		node.passage = self.graph[ordonnee][abscisse]['is_passage']
 		if node.passage :
 			node.g = 0
+		else :
+			node.g = node.time
 
 		return node
 
@@ -88,23 +83,19 @@ class PathFinder :
 			if neighbours_left > -1 :
 				# On ajoute le noeud en haut gauche du noeud courant
 				neighbour = self.getNodeFromGraph(neighbours_left, neighbours_up)
-				neighbour.parent = node
 				neighbours.append(neighbour)
 			# On ajoute le noeud au dessus du noeud courant
 			neighbour = self.getNodeFromGraph(node.x, neighbours_up)
-			neighbour.parent = node
 			neighbours.append(neighbour)
 			if neighbours_right < max_x :
 				# On ajoute le noeud en haut droit du noeud courant
 				neighbour = self.getNodeFromGraph(neighbours_right, neighbours_up)
-				neighbour.parent = node
 				neighbours.append(neighbour)
 		
 		if neighbours_right < max_x :
 			# La colonne de droite existe alors il y a au moins 2 voisins à droite du noeud
 			# On ajoute le noeud à droite du noeud courant
 			neighbour = self.getNodeFromGraph(neighbours_right, node.y)
-			neighbour.parent = node
 			neighbours.append(neighbour)
 
 		if neighbours_down < max_y :
@@ -112,23 +103,19 @@ class PathFinder :
 			if neighbours_right < max_x :
 				# On ajoute le noeud en bas droit du noeud courant
 				neighbour = self.getNodeFromGraph(neighbours_right, neighbours_down)
-				neighbour.parent = node
 				neighbours.append(neighbour)
 			# On ajoute le noeud en dessous du noeud courant
 			neighbour = self.getNodeFromGraph(node.x, neighbours_down)
-			neighbour.parent = node
 			neighbours.append(neighbour)
 			if neighbours_left > -1 :
 				# On ajoute le noeud en bas gauche du noeud courant
 				neighbour = self.getNodeFromGraph(neighbours_left, neighbours_down)
-				neighbour.parent = node
 				neighbours.append(neighbour)
 
 		if neighbours_left > -1 :
 			# La colonne de gauche existe alors il y a au moins 2 voisins à gauche du noeud
 			# On ajoute le noeud à gauche du noeud courant
 			neighbour = self.getNodeFromGraph(neighbours_left, node.y)
-			neighbour.parent = node
 			neighbours.append(neighbour)
 
 		return neighbours
@@ -177,27 +164,23 @@ class PathFinder :
 				if (neighbour in self.closeSet) or not neighbour.walkable :
 					continue
 
-				# Si le noeud parent est un changement de zone, alors le cout de la case courante est nul
-				if neighbour.parent.passage :
+				# Si le noeud courant est un changement de zone, alors le cout des cases voisines est nul
+				if curNode.passage :
 					neighbour.g = 0
 
-				newG = neighbour.parent.g + neighbour.g
-				newH = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
-				newF = newG + newH
-
 				if neighbour in self.openSet:
-					if newG < neighbour.g :
+					if curNode.g + neighbour.g < neighbour.g :
 						neighbour.parent = curNode
-						neighbour.g = newG
-						neighbour.h = newH
-						neighbour.f = newF
-						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, newG, newH)
+						neighbour.g = neighbour.parent.g + neighbour.time
+						neighbour.h = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
+						neighbour.f = neighbour.g + neighbour.h
+						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 				else :
 					neighbour.parent = curNode
-					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, newG, newH)
-					neighbour.g = newG
-					neighbour.h = newH
-					neighbour.f = newF
+					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
+					neighbour.g = neighbour.parent.g + neighbour.time
+					neighbour.h = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
+					neighbour.f = neighbour.g + neighbour.h
 					self.addToOpenSet(neighbour)
 
 		
