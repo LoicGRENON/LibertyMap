@@ -137,8 +137,10 @@ class MainInterface :
 		path = algo.findPath()
 		get_path_time = time.time() - start_time
 		print "Durée de recherche : %f" % get_path_time
+		self.grid.iconview.unselect_all()
 		for node in path :
 			print "(%i,%i)" % (node.x,node.y)
+			self.grid.iconview.select_path(node.x + 121 * node.y)
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
