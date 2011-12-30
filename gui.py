@@ -132,6 +132,8 @@ class MainInterface :
 
 	def CalcPath_cb(self, widget) :
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
+		graph[self.start_y][self.start_x].is_start = True
+		graph[self.end_y][self.end_x].is_end = True
 		algo = astar.PathFinder(graph, self.start_x, self.start_y, self.end_x, self.end_y)
 		start_time = time.time()
 		path = algo.findPath()

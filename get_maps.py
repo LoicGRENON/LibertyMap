@@ -35,13 +35,13 @@ def get_maps(login, password) :
 	urllib2.install_opener(urlOpener)
 
 	# On s'identifie sur le site
+	print "Identification sur LibertyIsland" 
 	params = urllib.urlencode({"user": login, "pwd": password}) 
 	request = urllib2.Request("http://libertyisland.johndegey.org/index.php", params)
 	urlOpener.open(request)
 
 	for carte in maps :
 		print "Récupération de la carte %s" % str(carte['name'])
-
 		params = urllib.urlencode({"action": "showMap", "ajaxcall": "1", "anglais": "off", "espagnol": "off", "francais": "off", "hollandais": "off", "grillage": "off", "pirates": "off", "passage": "on", "pnj": "off", "pnjFixe": "off", "pnjPassif": "off", "pos": "", "selmap": "", "map": carte['map_id']})
 		request = urllib2.Request("http://libertyisland.johndegey.org//restricted/zones.php", params)
 		url = urlOpener.open(request)
@@ -80,6 +80,7 @@ def get_maps(login, password) :
 
 				if col.find("div", {"class" : "passage"}) != None :
 					is_passage = True
+					time = 0
 				else :
 					is_passage = False
 
@@ -88,8 +89,8 @@ def get_maps(login, password) :
 				except IndexError :
 					print "Index Error : x_coord = %i, y_coord = %i" % (x_coord,y_coord)
 					break
-				x_coord += 1
 
+				x_coord += 1
 			y_coord += 1
 
 	# On vérifie qu'il n'y a pas de nouvelle image, dans le cas contraire, on la récupère

@@ -3,15 +3,18 @@
 
 import math
 import logging
+import copy
 
 class Node :
 	'''
 	A class representing a tile of the course
 	'''
-	def __init__(self, x, y, parent=None, g=0, h=0, f=0, walkable=True, passage=False, time=100, img_base=None, img_decor=None):
+	def __init__(self, x, y, nodeGoal=None, parent=None, is_start=False, is_end=False, g=0, h=0, f=0, walkable=True, passage=False, time=100, img_base=None, img_decor=None):
 		self.x = x
 		self.y = y
 		self.parent = parent
+		self.is_start = is_start
+		self.is_end = is_end
 		self.g = g
 		self.h = h
 		self.f = f
@@ -20,6 +23,78 @@ class Node :
 		self.time = time
 		self.img_base = img_base
 		self.img_decor = img_decor
+
+		if self.time == 100 :
+			self.walkable = False
+
+		# Si le noeud courant est un changement de zone, alors le cout de cette case est nul
+		if self.passage :
+			self.time = 0
+			self.walkable = True
+
+		if self.parent :
+			self.g = self.parent.g + self.time
+			if self.x == self.parent.x or self.y == self.parent.y :
+				self.g += 10
+			else :
+				self.g += 14
+			self.h = self.returnHscore(nodeGoal)
+		else :
+			self.g = 0
+			if self.is_start :
+				self.h = self.returnHscore(nodeGoal)
+			else :
+				self.h = 0
+		self.f = self.g + self.h
+
+	def computeScore(self, nodeGoal) :
+		if self.parent :
+			self.g = self.parent.g + self.time
+			if self.x == self.parent.x or self.y == self.parent.y :
+				self.g += 10
+			else :
+				self.g += 14
+			self.h = self.returnHscore(nodeGoal)
+		else :
+			self.g = 0
+			if self.is_start :
+				self.h = self.returnHscore(nodeGoal)
+			else :
+				self.h = 0
+		self.f = self.g + self.h
+
+	def returnHscore(self, nodeGoal) :
+		x = abs(self.x - nodeGoal.x)
+		y = abs(self.y - nodeGoal.y)
+
+		#return (y * 14) + 10 * (x - y) if (x > y) else (x * 14) + 10 * (y - x)
+		return x + y
+
+	def getNeighbours(self, graph, nodeGoal):
+		'''
+		This method check for node's orthogonal and diagonal contiguous nodes.
+		It returns a list of contiguous nodes
+		'''
+		neighbours = set()
+
+		max_x = len(graph[0])
+		max_y = len(graph)
+
+		northAmbit = 0 if self.y == 0 else self.y - 1
+		southAmbit = self.y if self.y == max_y - 1 else self.y + 1
+		westAmbit = 0 if self.x == 0 else self.x - 1
+		eastAmbit = self.x if self.x == max_x - 1 else self.x + 1
+
+		for i in xrange(northAmbit, southAmbit + 1) :
+			for j in xrange(westAmbit, eastAmbit + 1) :
+				if (i != self.y or j != self.x) :
+					if graph[i][j].walkable :
+						# Si le noeud courant est un changement de zone, alors le cout des cases voisines est nul
+						if graph[i][j].passage :
+							# TODO : Vérifier qu'on n'annule pas le temps des cases qui se trouvent AVANT le changement de zone
+							graph[i][j].time = 0
+						neighbours.add(graph[i][j])
+		return neighbours
 
 
 class PathFinder :
@@ -32,6 +107,8 @@ class PathFinder :
 		self.y_end = y_end
 		self.openSet = set()
 		self.closeSet = set()
+
+		self.nodeGoal = graph[y_start][x_start]
 
 		logging.basicConfig(
 			filename='debug.log',
@@ -50,75 +127,6 @@ class PathFinder :
 
 	def getCurrentNode(self):
 		return min(self.openSet, key=lambda node:node.f)
-
-	def getNodeFromGraph(self, abscisse, ordonnee):
-		node = self.graph[ordonnee][abscisse]
-
-		if node.time == 100 :
-			node.walkable = False
-
-		if node.passage :
-			node.g = 0
-		else :
-			node.g = node.time
-
-		return node
-
-	def getNeighbours(self, node):
-		'''
-		This method check for current node's orthogonal and diagonal contiguous nodes.
-		It returns a list of contiguous nodes
-		'''
-		neighbours = []
-		max_x = len(self.graph[0])
-		max_y = len(self.graph)
-
-		neighbours_up = node.y - 1	# Ordonnée de la ligne au dessus du noeud
-		neighbours_down = node.y + 1	# Ordonnée de la ligne en dessous du noeud
-		neighbours_left = node.x - 1	# Abscisse de la colonne à gauche du noeud
-		neighbours_right = node.x + 1	# Abscisse de la colonne à droite du noeud
-
-		if neighbours_up > -1 :
-			# La ligne du dessus existe alors il y a au moins 2 voisins au dessus du noeud
-			if neighbours_left > -1 :
-				# On ajoute le noeud en haut gauche du noeud courant
-				neighbour = self.getNodeFromGraph(neighbours_left, neighbours_up)
-				neighbours.append(neighbour)
-			# On ajoute le noeud au dessus du noeud courant
-			neighbour = self.getNodeFromGraph(node.x, neighbours_up)
-			neighbours.append(neighbour)
-			if neighbours_right < max_x :
-				# On ajoute le noeud en haut droit du noeud courant
-				neighbour = self.getNodeFromGraph(neighbours_right, neighbours_up)
-				neighbours.append(neighbour)
-		
-		if neighbours_right < max_x :
-			# La colonne de droite existe alors il y a au moins 2 voisins à droite du noeud
-			# On ajoute le noeud à droite du noeud courant
-			neighbour = self.getNodeFromGraph(neighbours_right, node.y)
-			neighbours.append(neighbour)
-
-		if neighbours_down < max_y :
-			# La ligne du dessous existe alors il y a au moins 2 voisins en dessous du noeud
-			if neighbours_right < max_x :
-				# On ajoute le noeud en bas droit du noeud courant
-				neighbour = self.getNodeFromGraph(neighbours_right, neighbours_down)
-				neighbours.append(neighbour)
-			# On ajoute le noeud en dessous du noeud courant
-			neighbour = self.getNodeFromGraph(node.x, neighbours_down)
-			neighbours.append(neighbour)
-			if neighbours_left > -1 :
-				# On ajoute le noeud en bas gauche du noeud courant
-				neighbour = self.getNodeFromGraph(neighbours_left, neighbours_down)
-				neighbours.append(neighbour)
-
-		if neighbours_left > -1 :
-			# La colonne de gauche existe alors il y a au moins 2 voisins à gauche du noeud
-			# On ajoute le noeud à gauche du noeud courant
-			neighbour = self.getNodeFromGraph(neighbours_left, node.y)
-			neighbours.append(neighbour)
-
-		return neighbours
 
 	def isOnCloseSet(self, node):
 		if node in self.closeSet :
@@ -141,7 +149,7 @@ class PathFinder :
 				return path
 			retracePath(c.parent)
 
-		curNode = self.getNodeFromGraph(self.x_start, self.y_start)
+		curNode = self.graph[self.y_start][self.x_start]
 		curNode.g = 0
 		self.addToOpenSet(curNode)
 		while len(self.openSet) :
@@ -158,30 +166,21 @@ class PathFinder :
 				break
 
 			# On récupère les voisins du noeud courant
-			neighbours = self.getNeighbours(curNode)
+			neighbours = curNode.getNeighbours(self.graph, self.nodeGoal)
 			for neighbour in neighbours :
 				# Si le noeud est dans la liste fermée ou que c'est un obstacle => on l'ignore et on passe au suivant
 				if (neighbour in self.closeSet) or not neighbour.walkable :
 					continue
 
-				# Si le noeud courant est un changement de zone, alors le cout des cases voisines est nul
-				if curNode.passage :
-					neighbour.g = 0
-
 				if neighbour in self.openSet:
 					if curNode.g + neighbour.g < neighbour.g :
 						neighbour.parent = curNode
-						neighbour.g = neighbour.parent.g + neighbour.time
-						neighbour.h = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
-						neighbour.f = neighbour.g + neighbour.h
+						neighbour.computeScore(self.nodeGoal)
 						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 				else :
 					neighbour.parent = curNode
 					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
-					neighbour.g = neighbour.parent.g + neighbour.time
-					neighbour.h = abs(self.x_end - neighbour.x) + abs(self.y_end - neighbour.y)
-					neighbour.f = neighbour.g + neighbour.h
+					neighbour.computeScore(self.nodeGoal)
 					self.addToOpenSet(neighbour)
-
 		
 		return path
