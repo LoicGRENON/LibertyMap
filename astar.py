@@ -32,20 +32,7 @@ class Node :
 			self.time = 0
 			self.walkable = True
 
-		if self.parent :
-			self.g = self.parent.g + self.time
-			if self.x == self.parent.x or self.y == self.parent.y :
-				self.g += 10
-			else :
-				self.g += 14
-			self.h = self.returnHscore(nodeGoal)
-		else :
-			self.g = 0
-			if self.is_start :
-				self.h = self.returnHscore(nodeGoal)
-			else :
-				self.h = 0
-		self.f = self.g + self.h
+		self.computeScore(nodeGoal)
 
 	def computeScore(self, nodeGoal) :
 		if self.parent :
@@ -66,9 +53,6 @@ class Node :
 	def returnHscore(self, nodeGoal) :
 		x = abs(self.x - nodeGoal.x)
 		y = abs(self.y - nodeGoal.y)
-
-		#return (y * 14) + 10 * (x - y) if (x > y) else (x * 14) + 10 * (y - x)
-		#return x + y
 		return max(x,y)
 
 	def getNeighbours(self, graph, nodeGoal):
@@ -151,7 +135,6 @@ class PathFinder :
 			retracePath(c.parent)
 
 		curNode = self.graph[self.y_start][self.x_start]
-		curNode.g = 0
 		self.addToOpenSet(curNode)
 		while len(self.openSet) :
 			# On va chercher le noeud avec le plus petit score F. Ça sera notre noeud courant
@@ -163,7 +146,7 @@ class PathFinder :
 			self.addToCloseSet(curNode)
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
-			if curNode.x == self.x_end and curNode.y == self.y_end :
+			if curNode.is_end :
 				print "Chemin trouvé !"
 				retracePath(curNode)
 				break
