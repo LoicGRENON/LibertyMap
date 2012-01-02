@@ -68,7 +68,8 @@ class Node :
 		y = abs(self.y - nodeGoal.y)
 
 		#return (y * 14) + 10 * (x - y) if (x > y) else (x * 14) + 10 * (y - x)
-		return x + y
+		#return x + y
+		return max(x,y)
 
 	def getNeighbours(self, graph, nodeGoal):
 		'''
@@ -108,7 +109,7 @@ class PathFinder :
 		self.openSet = set()
 		self.closeSet = set()
 
-		self.nodeGoal = graph[y_start][x_start]
+		self.nodeGoal = graph[y_end][x_end]
 
 		logging.basicConfig(
 			filename='debug.log',
@@ -155,8 +156,10 @@ class PathFinder :
 		while len(self.openSet) :
 			# On va chercher le noeud avec le plus petit score F. Ça sera notre noeud courant
 			curNode = self.getCurrentNode()
-			logging.debug("Noeud courant : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s", curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
-
+			if curNode.parent :
+				logging.debug("Noeud courant : (%i, %i) - Parent : (%i, %i) - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s", curNode.x, curNode.y, curNode.parent.x, curNode.parent.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
+			else :
+				logging.debug("Noeud courant : (%i, %i) - Parent : None     - G = %i | H = %i | F = %i | Walkable : %s | Passage : %s", curNode.x, curNode.y, curNode.g, curNode.h, curNode.f, curNode.walkable, curNode.passage)
 			self.addToCloseSet(curNode)
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
@@ -179,8 +182,8 @@ class PathFinder :
 						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 				else :
 					neighbour.parent = curNode
-					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 					neighbour.computeScore(self.nodeGoal)
+					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 					self.addToOpenSet(neighbour)
 		
 		return path
