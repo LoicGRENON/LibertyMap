@@ -247,13 +247,14 @@ class MainInterface :
 
 		start_time = time.time()
 		pixbuf_passage = self.CreateWayPixbuf()
-		i = 0
+
+		gtk.gdk.threads_enter()
+		self.grid.iconview.freeze_child_notify()
+
 		for row in self.graph :
-			j = 0
 			for col in row :
 				# col is an astar.Node instance
 
-				gtk.gdk.threads_enter()
 				passage = False
 
 				if col.img_base != None :
@@ -275,7 +276,10 @@ class MainInterface :
 				coord = str(col.x) + "," + str(col.y)
 				tooltip = coord + " (" + str(col.time) + " mins)"
 				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])
-				gtk.gdk.threads_leave()
+
+		self.grid.iconview.set_model(self.grid.listStore)
+		self.grid.iconview.thaw_child_notify()
+		gtk.gdk.threads_leave()
 
 		show_map_time = time.time() - start_time
 		print "Durée d'affichage de la carte : %f" % show_map_time
@@ -313,7 +317,6 @@ class GridInterface :
 		# ListStore columns : time, pixbuf, tooltip, x_coord, y_coord, passage
 		self.listStore = gtk.ListStore(gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
 		iconview = gtk.IconView()
-		iconview.set_model(self.listStore)
 		iconview.set_tooltip_column(2)
 		iconview.set_columns(121)
 		iconview.set_margin(0)
