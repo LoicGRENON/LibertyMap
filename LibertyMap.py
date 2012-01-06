@@ -11,6 +11,7 @@ import os
 import ConfigParser
 import astar
 import copy
+import urllib2
 
 LM_DIRNAME = 'LibertyMap'
 
@@ -226,6 +227,29 @@ class MainInterface :
 		return gtk.gdk.pixbuf_new_from_xpm_data(xpmdata)
 
 	def getMap(self) :
+		try :
+			local_md5_mapfile = self.config.config.get('general', 'md5_mapfile')
+		except :
+			local_md5_mapfile = ''
+
+		try :
+			url_req = urllib2.urlopen('http://libertymap.difoolou.net/map.md5sum')
+			distant_md5_mapfile = url_req.read(32)
+		except : # Si on n'arrive pas à récupérer le MD5SUM du fichier distant, on considère que le fichier local est à jour
+			distant_md5_mapfile = local_md5_mapfile
+
+		if local_md5_mapfile != distant_md5_mapfile :
+			print "Carte obsolète : Téléchargement de la nouvelle carte en cours ..."
+			url_req = urllib2.urlopen('http://libertymap.difoolou.net/map.xml.gz')
+			CHUNK = 16 * 1024
+			with open(LM_CACHE_PATH + '/map.xml.gz', 'wb') as fp:
+				for chunk in iter(lambda: url_req.read(CHUNK), ''):
+					fp.write(chunk)
+
+			self.config.config.set('general', 'md5_mapfile', distant_md5_mapfile)
+			self.config.write()
+			self.config.config.read(LM_CONF)
+
 		start_time = time.time()
 		self.graph, img_list = get_maps.get_map(LM_CACHE_PATH + '/map.xml.gz')
 		new_img_list = get_maps.check_images(img_list)
@@ -433,6 +457,8 @@ class Config :
 	def __init__(self) :
 		self.config = ConfigParser.ConfigParser()
 		if not os.access(LM_CONF, os.F_OK | os.W_OK) :
+			self.config.add_section('general')
+			self.config.set('general', 'md5_mapfile', '')
 			self.config.add_section('talents')
 			self.config.set('talents', 'rodeur', 'false')
 			self.config.set('talents', 'grimpeur', 'false')
