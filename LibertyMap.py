@@ -12,6 +12,7 @@ import ConfigParser
 import astar
 import copy
 import urllib2
+import logging
 
 LM_DIRNAME = 'LibertyMap'
 
@@ -38,6 +39,9 @@ class MainInterface :
 
 	def __init__(self, config) :
 		self.config = config
+
+		self.logger = LoggingInterface('LibertyMap.log')
+
 		self.graph = []
 		self.start_x = 0
 		self.start_y = 0
@@ -320,6 +324,24 @@ class MainInterface :
 		self.end_x = x_coord
 		self.end_y = y_coord
 		#self.endPos = astar.Node(x_coord, y_coord, None, time)
+
+class LoggingInterface :
+
+	def __init__(self, filename) :
+		logging.basicConfig(
+			filename=filename,
+			filemode='w',
+			level=logging.DEBUG,
+			format='%(asctime)s %(levelname)s - %(message)s',
+			datefmt='%d/%m/%Y %H:%M:%S',
+			)
+		console = logging.StreamHandler()
+		# set a format which is simpler for console use
+		formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+		# tell the handler to use this format
+		console.setFormatter(formatter)
+		# add the handler to the root logger
+		logging.getLogger('').addHandler(console)
 
 class GridInterface :
 

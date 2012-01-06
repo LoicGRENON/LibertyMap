@@ -97,6 +97,7 @@ class PathFinder :
 
 		logging.basicConfig(
 			filename='debug.log',
+			filemode='w',
 			level=logging.DEBUG,
 			format='%(asctime)s %(levelname)s - %(message)s',
 			datefmt='%d/%m/%Y %H:%M:%S',
