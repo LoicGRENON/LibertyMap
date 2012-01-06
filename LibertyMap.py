@@ -3,19 +3,13 @@
 
 # Gtk
 import gtk, gobject
-
 import thread
-
 import get_maps
-
 import time
-
 import os
 # parseur de config valeur-cle
 import ConfigParser
-
 import astar
-
 import copy
 
 LM_DIRNAME = 'LibertyMap'
@@ -231,19 +225,21 @@ class MainInterface :
 
 		return gtk.gdk.pixbuf_new_from_xpm_data(xpmdata)
 
-	def ShowMap(self) :
+	def getMap(self) :
 		start_time = time.time()
-		try :
-			login = self.config.config.get('borgne', 'login')
-		except :
-			login = None
-		try :
-			password = self.config.config.get('borgne', 'password')
-		except :
-			password = None
-		self.graph = get_maps.get_maps(login, password)
+		self.graph, img_list = get_maps.get_map(LM_CACHE_PATH + '/map.xml.gz')
+		new_img_list = get_maps.check_images(img_list)
+		nb_img = len(new_img_list)
+		if nb_img :
+			print "%i images à télécharger"
+			get_maps.download_images(new_img_list)
+		else :
+			print "Les images sont à jour"
 		get_map_time = time.time() - start_time
 		print "Durée de récupération des cartes : %f" % get_map_time
+
+	def ShowMap(self) :
+		self.getMap()
 
 		start_time = time.time()
 		pixbuf_passage = self.CreateWayPixbuf()
@@ -252,11 +248,7 @@ class MainInterface :
 		self.grid.iconview.freeze_child_notify()
 
 		for row in self.graph :
-			for col in row :
-				# col is an astar.Node instance
-
-				passage = False
-
+			for col in row :	# col is an astar.Node instance
 				if col.img_base != None :
 					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col.img_base)
 				else :
@@ -270,7 +262,6 @@ class MainInterface :
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col.passage :
-					passage = True
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				coord = str(col.x) + "," + str(col.y)
@@ -442,10 +433,6 @@ class Config :
 	def __init__(self) :
 		self.config = ConfigParser.ConfigParser()
 		if not os.access(LM_CONF, os.F_OK | os.W_OK) :
-			self.config.add_section('borgne')
-			self.config.set('borgne', 'login', '')
-			self.config.set('borgne', 'password', '')
-			
 			self.config.add_section('talents')
 			self.config.set('talents', 'rodeur', 'false')
 			self.config.set('talents', 'grimpeur', 'false')
@@ -476,34 +463,6 @@ class PrefsInterface :
 
 		notebook = gtk.Notebook()
 		main_vbox.pack_start(notebook)
-
-		vbox = gtk.VBox(False)
-
-		label = gtk.Label("Login")
-		label.set_alignment(0,0.5)
-		vbox.pack_start(label, False)
-		self.login = gtk.Entry()
-		try :
-			conf_value = config.config.get('borgne', 'login')
-		except :
-			conf_value = ''
-		self.login.set_text(conf_value)
-		vbox.pack_start(self.login, False)
-
-		label = gtk.Label("Password")
-		label.set_alignment(0,0.5)
-		vbox.pack_start(label, False)
-		self.password = gtk.Entry()
-		self.password.set_visibility(False)
-		try :
-			conf_value = config.config.get('borgne', 'password')
-		except :
-			conf_value = ''
-		self.password.set_text(conf_value)
-		vbox.pack_start(self.password, False)
-
-		label = gtk.Label("Borgne")
-		notebook.append_page(vbox, label)
 
 		vbox = gtk.VBox(False)
 
@@ -579,12 +538,6 @@ class PrefsInterface :
 		self.window.destroy()
 
 	def update(self, button, config) :
-		if not config.config.has_section("borgne") :
-			config.config.add_section("borgne")
-
-		config.config.set("borgne", "login", self.login.get_text())
-		config.config.set("borgne", "password", self.password.get_text())
-
 		if not config.config.has_section("talents") :
 			config.config.add_section("talents")
 
