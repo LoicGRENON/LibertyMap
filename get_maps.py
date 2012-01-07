@@ -34,26 +34,29 @@ def get_map(xml_file) :
 	grid = [[astar.Node(col, row) for col in range(121)] for row in range(139)]
 	img_list = set()
 
-	#etree.set_default_parser(etree.XMLParser(dtd_validation=False, load_dtd=False, no_network=False))
 	tree = etree.parse(xml_file)
 	root = tree.getroot()
 	for element in root.iter("Tile"):
 		x = int(element.attrib.get('x'))
 		y = int(element.attrib.get('y'))
 		time = element.attrib.get('time')
-		if time != None :
-			grid[y][x].time = time
+		img_src = None
+		decor_src = None
+		passage = False
+
+		if time == None :
+			time = 100
 		for child in element.iterchildren() :
 			if child.tag == "Img" :
 				img_src = child.attrib.get('src')
-				grid[y][x].img_base = img_src
 				img_list.add(img_src)
 			elif child.tag == "Decor" :
 				decor_src = child.attrib.get('src')
-				grid[y][x].img_decor = decor_src
 				img_list.add(decor_src)
 			elif child.tag == "is_passage" :
-				grid[y][x].passage = True
+				passage = True
+
+		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_src, img_decor=decor_src, passage = passage)
 
 	return (grid, img_list)
 
