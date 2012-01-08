@@ -277,20 +277,22 @@ class MainInterface :
 			gtk.gdk.threads_leave()
 			i += 1.0
 			yield True
-		self.progress_interface.progress_bar.set_text("Les images sont à jour")
-		self.progress_interface.progress_bar.set_fraction(1)
+		self.progress_interface.progressbar_img.set_text("Les images sont à jour")
+		self.progress_interface.progressbar_img.set_fraction(1)
 		get_map_time = time.time() - start_time
 		print "Durée de récupération des images : %f" % get_map_time
-		thread.start_new_thread(self.ShowMap, ())
+		map_loader = self.loadMap()
+		gobject.idle_add(map_loader.next)
 		yield False
 
-	def ShowMap(self) :
+	def loadMap(self, step=128) :
+		# http://faq.pygtk.org/index.py?req=show&file=faq13.043.htp
+		# http://stackoverflow.com/questions/8778587/is-there-a-way-to-continue-only-when-gobject-idle-add-function-terminate/8779184
 		start_time = time.time()
+		i = 1.0
+		nb_tiles = len(self.graph) * len(self.graph[0])
 		pixbuf_passage = self.CreateWayPixbuf()
-
-		gtk.gdk.threads_enter()
 		self.grid.iconview.freeze_child_notify()
-
 		for row in self.graph :
 			for col in row :	# col is an astar.Node instance
 				if col.img_base != None :
@@ -312,14 +314,20 @@ class MainInterface :
 				tooltip = coord + " (" + str(col.time) + " mins)"
 				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])
 
+				self.progress_interface.progressbar_map.set_fraction(i/nb_tiles)
+				self.progress_interface.progressbar_map.set_text("Chargement des tuiles en cours ...")
+				i += 1.0
+				if (i % step) == 0:
+					self.grid.iconview.thaw_child_notify()
+					yield True
+					self.grid.iconview.freeze_child_notify()
 		self.grid.iconview.set_model(self.grid.listStore)
 		self.grid.iconview.thaw_child_notify()
-		gtk.gdk.threads_leave()
-
 		show_map_time = time.time() - start_time
+		print "Durée d'affichage de la carte : %f" % show_map_time
 		# On retire la fenetre d'affichage de l'avancement des différents téléchargements, chargements, etc ...
 		self.progress_interface.window.destroy()
-		print "Durée d'affichage de la carte : %f" % show_map_time
+		yield False
 
 	def onChangeStartPos(self, widget, data=None) :
 		iconview = widget.get_parent().get_attach_widget()
@@ -406,16 +414,17 @@ class ProgressInterface :
 		self.label = gtk.Label("Téléchargement de l'image")
 		vbox.pack_start(self.label, False)
 
-		self.progress_bar = gtk.ProgressBar()
-		vbox.pack_start(self.progress_bar, False)
+		self.progressbar_img = gtk.ProgressBar()
+		vbox.pack_start(self.progressbar_img, False)
 
-		self.fraction = 0
+		self.progressbar_map = gtk.ProgressBar()
+		vbox.pack_start(self.progressbar_map, False)
 
 		self.window.show_all()
 
 	def set_progress(self, current, total) :
-		self.progress_bar.set_text("Téléchargement de l'image %i/%i" % (current, total))
-		self.progress_bar.set_fraction(current/total)
+		self.progressbar_img.set_text("Téléchargement de l'image %i/%i" % (current, total))
+		self.progressbar_img.set_fraction(current/total)
 
 class PopupMenu :
 
