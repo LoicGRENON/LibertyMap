@@ -35,6 +35,21 @@ def download_images(img_list) :
 			(exctype, value, traceback) = sys.exc_info()
 			print "Erreur - %s : %s" % (exctype, value)
 
+def download_image(img) :
+	if os.name == "nt" :
+		path = LM_CACHE_PATH + os.sep + 'media' + os.sep.join(img.split('/'))
+	else :
+		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
+	img_path = 'http://libertyisland.johndegey.org' + img
+	print "Récupération de l'image '%s' vers %s" % (img_path, path)
+	try :
+		ensure_dir(path)
+		urllib.urlretrieve(img_path, path)
+		print "Succès"
+	except :
+		(exctype, value, traceback) = sys.exc_info()
+		print "Erreur - %s : %s" % (exctype, value)
+
 def get_map(xml_file) :
 	# On crée la matrice qui contiendra les infos de la carte
 	grid = [[astar.Node(col, row) for col in range(121)] for row in range(139)]

@@ -84,7 +84,9 @@ class MainInterface :
 
 		self.window.show_all()
 
-		thread.start_new_thread(self.ShowMap, ())
+		self.progress_interface = ProgressInterface(self.window)
+
+		thread.start_new_thread(self.getMap, ())
 
 		gtk.gdk.threads_init()
 		gtk.gdk.threads_enter()
@@ -257,21 +259,32 @@ class MainInterface :
 			self.config.write()
 			self.config.config.read(LM_CONF)
 
-		start_time = time.time()
 		self.graph, img_list = get_maps.get_map(LM_MAP)
 		new_img_list = get_maps.check_images(img_list)
-		nb_img = len(new_img_list)
-		if nb_img :
-			print "%i images à télécharger"
-			get_maps.download_images(new_img_list)
-		else :
-			print "Les images sont à jour"
+		getImage = self.getImages(new_img_list)
+		gobject.idle_add(getImage.next)
+
+	def getImages(self, img_list) :
+		# http://faq.pygtk.org/index.py?req=show&file=faq23.020.htp
+		# http://stackoverflow.com/questions/8778587/is-there-a-way-to-continue-only-when-gobject-idle-add-function-terminate/8779184
+		start_time = time.time()
+		nb_img = len(img_list)
+		i = 1.0
+		for img in img_list :
+			self.progress_interface.set_progress(i, nb_img)
+			gtk.gdk.threads_enter()
+			get_maps.download_image(img)
+			gtk.gdk.threads_leave()
+			i += 1.0
+			yield True
+		self.progress_interface.progress_bar.set_text("Les images sont à jour")
+		self.progress_interface.progress_bar.set_fraction(1)
 		get_map_time = time.time() - start_time
-		print "Durée de récupération des cartes : %f" % get_map_time
+		print "Durée de récupération des images : %f" % get_map_time
+		thread.start_new_thread(self.ShowMap, ())
+		yield False
 
 	def ShowMap(self) :
-		self.getMap()
-
 		start_time = time.time()
 		pixbuf_passage = self.CreateWayPixbuf()
 
@@ -304,6 +317,8 @@ class MainInterface :
 		gtk.gdk.threads_leave()
 
 		show_map_time = time.time() - start_time
+		# On retire la fenetre d'affichage de l'avancement des différents téléchargements, chargements, etc ...
+		self.progress_interface.window.destroy()
 		print "Durée d'affichage de la carte : %f" % show_map_time
 
 	def onChangeStartPos(self, widget, data=None) :
@@ -375,6 +390,32 @@ class GridInterface :
 		iconview.set_attributes(renderer,pixbuf=1)
     
 		scroll_bar.add(iconview)
+
+class ProgressInterface :
+
+	def __init__(self, parent_window) :
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_default_size(400, 400)
+		self.window.set_deletable(False)
+		self.window.set_transient_for(parent_window)
+		self.window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+
+		vbox = gtk.VBox(False, True)
+		self.window.add(vbox)
+
+		self.label = gtk.Label("Téléchargement de l'image")
+		vbox.pack_start(self.label, False)
+
+		self.progress_bar = gtk.ProgressBar()
+		vbox.pack_start(self.progress_bar, False)
+
+		self.fraction = 0
+
+		self.window.show_all()
+
+	def set_progress(self, current, total) :
+		self.progress_bar.set_text("Téléchargement de l'image %i/%i" % (current, total))
+		self.progress_bar.set_fraction(current/total)
 
 class PopupMenu :
 
