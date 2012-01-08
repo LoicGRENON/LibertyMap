@@ -462,7 +462,7 @@ class MenuInterface :
 		# Les éléments du menu ?
 		menu_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_ABOUT)
 		menu_item.set_tooltip_text('À propos')
-		menu_item.connect("activate", About, data)
+		menu_item.connect("activate", About)
 		menu.append(menu_item)
 
 		data.window.add_accel_group(accel)
@@ -495,11 +495,18 @@ class ToolBarInterface :
 class About :
 	"Fenêtre about"
 
-	about = None
-
-	def __init__(self, widget, wto) :
+	def __init__(self, widget) :
 		about = gtk.AboutDialog()
-
+		if os.access(APP_ICON,os.F_OK) :
+			about.set_icon(gtk.gdk.pixbuf_new_from_file(APP_ICON))
+			about.set_logo(gtk.gdk.pixbuf_new_from_file(APP_ICON))
+		about.set_authors([author + '\n' for author in APP_AUTHORS])
+		about.set_license(APP_LICENSE)
+		about.set_name(APP_NAME)
+		about.set_version(APP_VERSION)
+		about.set_comments(APP_DESCRIPTION)
+		about.set_copyright(APP_COPYRIGHT)
+		about.set_website(APP_WEBSITE)
 
 		about.run()
 		about.destroy()
