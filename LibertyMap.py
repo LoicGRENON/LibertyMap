@@ -13,6 +13,7 @@ import astar
 import copy
 import urllib2
 import logging
+from common import *
 
 LM_DIRNAME = 'LibertyMap'
 
@@ -33,6 +34,7 @@ else:
 
 # Autres emplacements
 LM_CONF = os.path.join(LM_CONFIG_PATH, 'LibertyMap.conf')
+LM_MAP = os.path.join(LM_CACHE_PATH, 'map.xml.gz')
 
 class MainInterface :
 	window, menu, statusBar = None, None, None
@@ -246,7 +248,8 @@ class MainInterface :
 			print "Carte obsolète : Téléchargement de la nouvelle carte en cours ..."
 			url_req = urllib2.urlopen('http://libertymap.difoolou.net/map.xml.gz')
 			CHUNK = 16 * 1024
-			with open(LM_CACHE_PATH + '/map.xml.gz', 'wb') as fp:
+			ensure_dir(LM_MAP)
+			with open(LM_MAP, 'wb') as fp:
 				for chunk in iter(lambda: url_req.read(CHUNK), ''):
 					fp.write(chunk)
 
@@ -255,7 +258,7 @@ class MainInterface :
 			self.config.config.read(LM_CONF)
 
 		start_time = time.time()
-		self.graph, img_list = get_maps.get_map(LM_CACHE_PATH + '/map.xml.gz')
+		self.graph, img_list = get_maps.get_map(LM_MAP)
 		new_img_list = get_maps.check_images(img_list)
 		nb_img = len(new_img_list)
 		if nb_img :
@@ -278,14 +281,14 @@ class MainInterface :
 		for row in self.graph :
 			for col in row :	# col is an astar.Node instance
 				if col.img_base != None :
-					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col.img_base)
+					pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_base))
 				else :
-					pixbuf = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media/images/carregris.gif")
+					pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + "images"+ os.sep + "carregris.gif"))
 
 				# S'il y a un décor pour cette case, on l'affiche par dessus l'image de fond
 				pixbux_decor = None
 				if col.img_decor != None :
-					pixbuf_decor = gtk.gdk.pixbuf_new_from_file(LM_CACHE_PATH + "/media" + col.img_decor)
+					pixbuf_decor = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_decor))
 					pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				# Si la case est un changement de zone, on modifie son apparence

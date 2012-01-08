@@ -7,12 +7,13 @@ import os
 import sys
 import cookielib, urllib, urllib2
 import astar
+from common import *
 from gui import LM_CACHE_PATH
 
 def check_images(img_list) :
 	new_img = set()
 	for img in img_list :
-		path = LM_CACHE_PATH + '/media' + img
+		path = LM_CACHE_PATH + os.sep + 'media' + img
 		if not os.access(path, os.F_OK):
 			new_img.add(img)
 
@@ -20,14 +21,19 @@ def check_images(img_list) :
 
 def download_images(img_list) :
 	for img in img_list :
-		path = LM_CACHE_PATH + '/media' + img
+		if os.name == "nt" :
+			path = LM_CACHE_PATH + os.sep + 'media' + os.sep.join(img.split('/'))
+		else :
+			path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
 		img_path = 'http://libertyisland.johndegey.org' + img
 		print "Récupération de l'image '%s' vers %s" % (img_path, path)
 		try :
+			ensure_dir(path)
 			urllib.urlretrieve(img_path, path)
 			print "Succès"
 		except :
-			print "Erreur"
+			(exctype, value, traceback) = sys.exc_info()
+			print "Erreur - %s : %s" % (exctype, value)
 
 def get_map(xml_file) :
 	# On crée la matrice qui contiendra les infos de la carte
