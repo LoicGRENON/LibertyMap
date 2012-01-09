@@ -137,7 +137,7 @@ class MainInterface :
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
 		graph[self.start_y][self.start_x].is_start = True
 		graph[self.end_y][self.end_x].is_end = True
-		algo = astar.PathFinder(graph, self.start_x, self.start_y, self.end_x, self.end_y)
+		algo = astar.PathFinder(graph, self.start_x, self.start_y, self.end_x, self.end_y, time_func = self.compute_effective_time)
 		start_time = time.time()
 		path = algo.findPath()
 		get_path_time = time.time() - start_time

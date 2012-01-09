@@ -21,6 +21,7 @@ class Node :
 		self.walkable = walkable
 		self.passage = passage
 		self.time = time
+		self.path_time = 0
 		self.img_base = img_base
 		self.img_decor = img_decor
 
@@ -34,13 +35,20 @@ class Node :
 
 		self.computeScore(nodeGoal)
 
-	def computeScore(self, nodeGoal) :
+	def computeScore(self, nodeGoal, time_func=None) :
 		if self.parent :
-			self.g = self.parent.g + self.time
+			if hasattr(time_func, '__call__') :	# Si l'argument est bien une fonction
+				self.g = self.parent.g + time_func(self.time)
+				self.path_time = self.parent.path_time + time_func(self.time)
+			else :
+				self.g = self.parent.g + self.time
+				self.path_time = self.parent.path_time + self.time
+
 			if self.x == self.parent.x or self.y == self.parent.y :
 				self.g += 10
 			else :
 				self.g += 14
+
 			self.h = self.returnHscore(nodeGoal)
 		else :
 			self.g = 0
@@ -48,6 +56,7 @@ class Node :
 				self.h = self.returnHscore(nodeGoal)
 			else :
 				self.h = 0
+
 		self.f = self.g + self.h
 
 	def returnHscore(self, nodeGoal) :
@@ -84,12 +93,14 @@ class Node :
 
 class PathFinder :
 
-	def __init__(self, graph, x_start, y_start, x_end, y_end):
+	def __init__(self, graph, x_start, y_start, x_end, y_end, time_func=None):
 		self.graph = graph
 		self.x_start = x_start
 		self.y_start = y_start
 		self.x_end = x_end
 		self.y_end = y_end
+		self.time_func = time_func
+
 		self.openSet = set()
 		self.closeSet = set()
 
@@ -149,6 +160,7 @@ class PathFinder :
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.is_end :
 				print "Chemin trouvé !"
+				print "Temps total du trajet : %i" % curNode.path_time
 				retracePath(curNode)
 				break
 
@@ -162,11 +174,11 @@ class PathFinder :
 				if neighbour in self.openSet:
 					if curNode.g + neighbour.g < neighbour.g :
 						neighbour.parent = curNode
-						neighbour.computeScore(self.nodeGoal)
+						neighbour.computeScore(self.nodeGoal, self.time_func)
 						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 				else :
 					neighbour.parent = curNode
-					neighbour.computeScore(self.nodeGoal)
+					neighbour.computeScore(self.nodeGoal, self.time_func)
 					logging.debug("(%i,%i) - G : %i - H : %i - in openSet : No", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
 					self.addToOpenSet(neighbour)
 		
