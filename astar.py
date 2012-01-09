@@ -83,10 +83,17 @@ class Node :
 			for j in xrange(westAmbit, eastAmbit + 1) :
 				if (i != self.y or j != self.x) :
 					if graph[i][j].walkable :
-						# Si le noeud courant est un changement de zone, alors le cout des cases voisines est nul
+						# Si la case voisine est un changement de zone, alors son coût est nul
 						if graph[i][j].passage :
-							# TODO : Vérifier qu'on n'annule pas le temps des cases qui se trouvent AVANT le changement de zone
 							graph[i][j].time = 0
+						# Si le noeud courant est un changement de zone, alors le cout des cases voisines est nul
+						if self.passage :
+							if self.parent :
+								if self.parent.x != graph[i][j].x or self.parent.y != graph[i][j].y :
+									# On annule le coût des cases voisines aux changement de zone, sauf celle d'où on vient (le noeud parent)
+									graph[i][j].time = 0
+							else :	# Si la case de départ est un changement de zone ...
+								graph[i][j].time = 0
 						neighbours.add(graph[i][j])
 		return neighbours
 
