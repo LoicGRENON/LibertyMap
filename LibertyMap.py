@@ -574,36 +574,36 @@ class PrefsInterface :
 
 		vbox = gtk.VBox(False)
 
-		self.talt_rodeur_btn = gtk.CheckButton("Rodeur")
 		try :
 			conf_value = config.config.getboolean('talents', 'rodeur')
 		except :
 			conf_value = False
-		self.talt_rodeur_btn.set_active(conf_value)
+		self.talt_rodeur_btn = TalentCheckButton("Rodeur", initial_state = conf_value)
+		self.talt_rodeur_btn.set_tooltip_markup('Gain de 10% sur chaque case traversée.')
 		vbox.pack_start(self.talt_rodeur_btn , False)
 
-		self.talt_grimpeur_btn = gtk.CheckButton("Grimpeur")
 		try :
 			conf_value = config.config.getboolean('talents', 'grimpeur')
 		except :
 			conf_value = False
-		self.talt_grimpeur_btn.set_active(conf_value)
+		self.talt_grimpeur_btn = TalentCheckButton("Grimpeur", initial_state = conf_value, parent_button = self.talt_rodeur_btn)
+		self.talt_grimpeur_btn.set_tooltip_markup('Gain de 10min sur les cases de montagne à 60min de base.')
 		vbox.pack_start(self.talt_grimpeur_btn , False)
 
-		self.talt_aventurier_btn = gtk.CheckButton("Aventurier")
 		try :
 			conf_value = config.config.getboolean('talents', 'aventurier')
 		except :
 			conf_value = False
-		self.talt_aventurier_btn.set_active(conf_value)
+		self.talt_aventurier_btn = TalentCheckButton("Aventurier", initial_state = conf_value, parent_button = self.talt_grimpeur_btn)
+		self.talt_aventurier_btn.set_tooltip_markup('Gain de 10min sur les cases de jungle dense à 50min de base.')
 		vbox.pack_start(self.talt_aventurier_btn , False)
 
-		self.talt_randonneur_btn = gtk.CheckButton("Randonneur")
 		try :
 			conf_value = config.config.getboolean('talents', 'randonneur')
 		except :
 			conf_value = False
-		self.talt_randonneur_btn.set_active(conf_value)
+		self.talt_randonneur_btn = TalentCheckButton("Randonneur", initial_state = conf_value, parent_button = self.talt_aventurier_btn)
+		self.talt_randonneur_btn.set_tooltip_markup('Gain de 10min sur les cases de forêt à 40min de base.')
 		vbox.pack_start(self.talt_randonneur_btn , False)
 
 		vbox_reduc = gtk.VBox(False)
@@ -660,6 +660,42 @@ class PrefsInterface :
 		config.config.read(LM_CONF)
 
 		self.window.destroy()
+
+class TalentCheckButton(gtk.CheckButton) :
+	def __init__(self, label=None, use_underline=True, initial_state = False, parent_button = None) :
+		gtk.CheckButton.__init__(self, label, use_underline)
+		self.set_active(initial_state)
+		self.connect("clicked", self.__on_toggled)
+		self.child_button = None
+		self.set_parent_button(parent_button)
+
+	def set_parent_button(self, parent_button) :
+		self.parent_button = parent_button
+		if parent_button :
+			parent_button.child_button = self
+
+		self.__on_toggled(self)
+
+	def __on_toggled(self, button) :
+		if self.parent_button :
+			if self.parent_button.get_active() :
+				self.set_sensitive(True)
+				if self.child_button :
+					if self.get_active() :
+						self.parent_button.set_sensitive(False)
+						self.child_button.set_sensitive(True)
+					else :
+						self.child_button.set_sensitive(False)
+						self.parent_button.set_sensitive(True)
+				else :
+					self.parent_button.set_sensitive(not self.get_active())
+			else :
+				self.set_sensitive(False)
+				if self.child_button :
+					self.child_button.set_sensitive(False)
+		else :
+			if self.child_button :
+				self.child_button.set_sensitive(self.get_active())
 
 def main() :
 	config = Config()
