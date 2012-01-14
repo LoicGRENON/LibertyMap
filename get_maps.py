@@ -13,7 +13,7 @@ from gui import LM_CACHE_PATH
 def check_images(img_list) :
 	new_img = set()
 	for img in img_list :
-		path = LM_CACHE_PATH + os.sep + 'media' + img
+		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
 		if not os.access(path, os.F_OK):
 			new_img.add(img)
 
@@ -22,10 +22,10 @@ def check_images(img_list) :
 def download_images(img_list) :
 	for img in img_list :
 		if os.name == "nt" :
-			path = LM_CACHE_PATH + os.sep + 'media' + os.sep.join(img.split('/'))
+			path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
 		else :
 			path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
-		img_path = 'http://libertyisland.johndegey.org' + img
+		img_path = 'http://libertyisland.johndegey.org/' + img
 		print "Récupération de l'image '%s' vers %s" % (img_path, path)
 		try :
 			ensure_dir(path)
@@ -37,10 +37,10 @@ def download_images(img_list) :
 
 def download_image(img) :
 	if os.name == "nt" :
-		path = LM_CACHE_PATH + os.sep + 'media' + os.sep.join(img.split('/'))
+		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
 	else :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
-	img_path = 'http://libertyisland.johndegey.org' + img
+	img_path = 'http://libertyisland.johndegey.org/' + img
 	print "Récupération de l'image '%s' vers %s" % (img_path, path)
 	try :
 		ensure_dir(path)
@@ -61,8 +61,8 @@ def get_map(xml_file) :
 		x = int(element.attrib.get('x'))
 		y = int(element.attrib.get('y'))
 		time = element.attrib.get('time')
-		img_src = None
-		decor_src = None
+		img_base = None
+		img_decor = None
 		passage = False
 
 		if time == None :
@@ -70,14 +70,16 @@ def get_map(xml_file) :
 		for child in element.iterchildren() :
 			if child.tag == "Img" :
 				img_src = child.attrib.get('src')
+				img_base = os.sep.join(img_src.split('/'))
 				img_list.add(img_src)
 			elif child.tag == "Decor" :
 				decor_src = child.attrib.get('src')
+				img_decor = os.sep.join(decor_src.split('/'))
 				img_list.add(decor_src)
 			elif child.tag == "is_passage" :
 				passage = True
-
-		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_src, img_decor=decor_src, passage = passage)
+			
+		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_base, img_decor = img_decor, passage = passage)
 
 	return (grid, img_list)
 

@@ -19,17 +19,19 @@ LM_DIRNAME = 'LibertyMap'
 
 # Emplacements dépendants de l'OS
 if 'APPDATA' in os.environ:
-	LM_CONFIG_PATH = os.path.join(os.environ['APPDATA'], LM_DIRNAME)
+	try :
+		from win32com.shell import shellcon, shell            
+		appdata_path = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+	except :
+		print "Pas de win32com.shell"
+		appdata_path = os.environ['APPDATA']
+	LM_CONFIG_PATH = os.path.join(appdata_path, LM_DIRNAME)
+	LM_CACHE_PATH = os.path.join(LM_CONFIG_PATH, 'cache')
 elif 'XDG_CONFIG_HOME' in os.environ:
 	LM_CONFIG_PATH = os.path.join(os.environ['XDG_CONFIG_HOME'], LM_DIRNAME)
-else:
-	LM_CONFIG_PATH = os.path.join(os.environ['HOME'], '.config', LM_DIRNAME)
-
-if 'APPDATA' in os.environ:
-	LM_CACHE_PATH = os.path.join(LM_CONFIG_PATH, 'cache')
-elif 'XDG_CACHE_HOME' in os.environ:
 	LM_CACHE_PATH = os.path.join(os.environ['XDG_CACHE_HOME'], LM_DIRNAME)
 else:
+	LM_CONFIG_PATH = os.path.join(os.environ['HOME'], '.config', LM_DIRNAME)
 	LM_CACHE_PATH = os.path.join(os.environ['HOME'], '.cache', LM_DIRNAME)
 
 # Autres emplacements
