@@ -79,11 +79,6 @@ class MainInterface :
 		self.statusBar = StatusBarInterface(self)
 		vbox.pack_start(self.statusBar.status_bar, False, False, 0)
 
-		# Menu clic droit
-		self.popup_menu = PopupMenu(self)
-		self.popup_menu = self.popup_menu.popup_menu
-		self.popup_menu.attach_to_widget(self.grid.iconview, None)
-
 		self.window.show_all()
 
 		self.progress_interface = ProgressInterface(self.window)
@@ -111,7 +106,12 @@ class MainInterface :
 				iconview.grab_focus()
 				iconview.set_cursor(path, renderer)
 				iconview.select_path(path)
-				self.popup_menu.popup(None, None, None, event.button, event.time)
+
+				# Menu clic droit
+				popup_menu = PopupMenu(self)
+				popup_menu = popup_menu.popup_menu
+				popup_menu.attach_to_widget(self.grid.iconview, None)
+				popup_menu.popup(None, None, None, event.button, event.time)
 			return True
 
 		if event.button == 1:
@@ -434,14 +434,14 @@ class PopupMenu :
 		self.popup_menu = gtk.Menu()
 
 		popup_item = gtk.MenuItem("Départ")
-		popup_item.show()
-		popup_item.connect("activate", data.onChangeStartPos)
 		self.popup_menu.append(popup_item)
+		popup_item.connect("activate", data.onChangeStartPos)
+		popup_item.show()
 
 		popup_item = gtk.MenuItem("Arrivée")
-		popup_item.show()
-		popup_item.connect("activate", data.onChangeEndPos)
 		self.popup_menu.append(popup_item)
+		popup_item.connect("activate", data.onChangeEndPos)
+		popup_item.show()
 
 class MenuInterface :
   
