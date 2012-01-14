@@ -195,46 +195,22 @@ class MainInterface :
 
 		return time
 
-	def CreateWayPixbuf(self) :
-		xpmdata = [
-			"32 32 2 1",
-			"       c None",
-			".      c #FF0000",
-			"................................",
-			"................................",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"..                            ..",
-			"................................",
-			"................................"
-			]
+	def CreateXPM(self, bg_color=None, width=32, height=32, border_width=0, border_color=None) :
+		xpm_data = ["%i %i 2 1" % (width, height)]
+		xpm_data.append("  c %s" % bg_color)
+		xpm_data.append(". c %s" % border_color)
 
-		return gtk.gdk.pixbuf_new_from_xpm_data(xpmdata)
+		# Bordure supérieure
+		for y in xrange(border_width) :
+			xpm_data.append("".join("." for x in range(width)))
+		# Corps et bordures latérales
+		for y in xrange(height-2*border_width) :
+			xpm_data.append("".join("." for x in range(border_width)) + "".join(" " for x in range(width-2*border_width)) + "".join("." for x in range(border_width)))
+		# Bordure inférieure
+		for y in xrange(border_width) :
+			xpm_data.append("".join("." for x in range(width)))
+
+		return gtk.gdk.pixbuf_new_from_xpm_data(xpm_data)
 
 	def getMap(self) :
 		try :
@@ -293,20 +269,24 @@ class MainInterface :
 		start_time = time.time()
 		i = 1.0
 		nb_tiles = len(self.graph) * len(self.graph[0])
-		pixbuf_passage = self.CreateWayPixbuf()
+		pixbuf_passage = self.CreateXPM(border_width=2, border_color="#FF0000")
+		missing_pixbuf = self.CreateXPM(bg_color="#808080")
 		self.grid.iconview.freeze_child_notify()
 		for row in self.graph :
 			for col in row :	# col is an astar.Node instance
 				if col.img_base != None :
-					pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_base))
+					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_base)
+					pixbuf = gtk.gdk.pixbuf_new_from_file(image_path) if os.access(image_path, os.F_OK) else missing_pixbuf	
 				else :
-					pixbuf = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + "images"+ os.sep + "carregris.gif"))
+					pixbuf = missing_pixbuf
 
 				# S'il y a un décor pour cette case, on l'affiche par dessus l'image de fond
 				pixbux_decor = None
 				if col.img_decor != None :
-					pixbuf_decor = gtk.gdk.pixbuf_new_from_file(os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_decor))
-					pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
+					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_decor)
+					if os.access(image_path, os.F_OK) :
+						pixbuf_decor = gtk.gdk.pixbuf_new_from_file(image_path)
+						pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col.passage :
