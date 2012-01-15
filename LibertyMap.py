@@ -143,10 +143,19 @@ class MainInterface :
 		path = algo.findPath()
 		get_path_time = time.time() - start_time
 		print "Durée de recherche : %f" % get_path_time
+		
 		self.grid.iconview.unselect_all()
-		for node in path :
-			print "(%i,%i)" % (node.x,node.y)
-			self.grid.iconview.select_path(node.x + 121 * node.y)
+		if len(path) == 0 :
+			title = "Trajet impossible"
+			message = "Il n'y a pas de chemin possible de (%i,%i) vers (%i,%i)." % (self.start_x, self.start_y, self.end_x, self.end_y)
+			dialog = gtk.MessageDialog(parent=self.window, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format=title)
+			dialog.format_secondary_text(message)
+			dialog.run()
+			dialog.destroy()
+		else :
+			for node in path :
+				print "(%i,%i)" % (node.x,node.y)
+				self.grid.iconview.select_path(node.x + 121 * node.y)
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
