@@ -232,7 +232,8 @@ class MainInterface :
 		except : # Si on n'arrive pas à récupérer le MD5SUM du fichier distant, on considère que le fichier local est à jour
 			distant_md5_mapfile = local_md5_mapfile
 
-		if local_md5_mapfile != distant_md5_mapfile :
+		# Si la carte n'est pas à jour ou que l'on arrive pas à la lire, on la télécharge
+		if local_md5_mapfile != distant_md5_mapfile or not os.access(LM_MAP, os.F_OK):
 			print "Carte obsolète : Téléchargement de la nouvelle carte en cours ..."
 			url_req = urllib2.urlopen('http://libertymap.difoolou.net/map.xml.gz')
 			CHUNK = 16 * 1024
