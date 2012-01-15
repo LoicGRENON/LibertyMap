@@ -169,6 +169,10 @@ class PathFinder :
 				return path
 			retracePath(c.parent)
 
+		# Si le noeud de départ ou d'arrivée ne peuvent pas être traversées, il n'y a pas de trajet possible
+		if not self.graph[self.y_start][self.x_start].walkable or not self.graph[self.y_end][self.x_end].walkable :
+			return path
+
 		curNode = self.graph[self.y_start][self.x_start]
 		self.addToOpenSet(curNode)
 		while len(self.openSet) :
