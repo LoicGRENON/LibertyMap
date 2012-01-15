@@ -20,10 +20,9 @@ LM_DIRNAME = 'LibertyMap'
 # Emplacements dépendants de l'OS
 if 'APPDATA' in os.environ:
 	try :
-		from win32com.shell import shellcon, shell            
+		from win32com.shell import shellcon, shell #@UnresolvedImport
 		appdata_path = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
 	except :
-		print "Pas de win32com.shell"
 		appdata_path = os.environ['APPDATA']
 	LM_CONFIG_PATH = os.path.join(appdata_path, LM_DIRNAME)
 	LM_CACHE_PATH = os.path.join(LM_CONFIG_PATH, 'cache')
@@ -153,7 +152,7 @@ class MainInterface :
 		self.grid.iconview.unselect_all()
 
 	def Prefs_cb(self, widget) :
-		pref_window = PrefsInterface(self.window, self.config)
+		PrefsInterface(self.window, self.config)
 
 	def compute_effective_time(self, time) :
 		try :
@@ -281,7 +280,6 @@ class MainInterface :
 					pixbuf = missing_pixbuf
 
 				# S'il y a un décor pour cette case, on l'affiche par dessus l'image de fond
-				pixbux_decor = None
 				if col.img_decor != None :
 					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_decor)
 					if os.access(image_path, os.F_OK) :
@@ -378,7 +376,7 @@ class GridInterface :
 		renderer.set_property('follow-state', True)
 		iconview.pack_start(renderer)
 		iconview.set_attributes(renderer,pixbuf=1)
-    
+
 		scroll_bar.add(iconview)
 
 class ProgressInterface :
@@ -424,7 +422,7 @@ class PopupMenu :
 		popup_item.show()
 
 class MenuInterface :
-  
+
 	menu_bar = None
 
 	def __init__(self, data) :
@@ -503,7 +501,7 @@ class About :
 		about.destroy()
 
 class StatusBarInterface :
-  
+
 	status_bar, context_id = None, None
 
 	def addText(self, msg) :
@@ -515,7 +513,7 @@ class StatusBarInterface :
 		self.context_id = self.status_bar.get_context_id("ShowChannel")
 
 class Config :
-  
+
 	config = None
 
 	def __init__(self) :
@@ -681,7 +679,7 @@ class TalentCheckButton(gtk.CheckButton) :
 
 def main() :
 	config = Config()
-	t = MainInterface(config)
+	MainInterface(config)
 
 if __name__ == '__main__' :
 	main()

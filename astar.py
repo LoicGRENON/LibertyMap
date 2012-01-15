@@ -59,6 +59,22 @@ class Node :
 
 		self.f = self.g + self.h
 
+	def returnGscore(self, time_func=None) :
+		if self.parent :
+			if hasattr(time_func, '__call__') :	# Si l'argument est bien une fonction
+				g = self.parent.g + time_func(self.time)
+			else :
+				g = self.parent.g + self.time
+
+			if self.x == self.parent.x or self.y == self.parent.y :
+				g += 10
+			else :
+				g += 14
+		else :
+			g = 0
+
+		return g
+
 	def returnHscore(self, nodeGoal) :
 		x = abs(self.x - nodeGoal.x)
 		y = abs(self.y - nodeGoal.y)
@@ -166,8 +182,7 @@ class PathFinder :
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.is_end :
-				print "Chemin trouvé !"
-				print "Temps total du trajet : %i" % curNode.path_time
+				logging.debug("Chemin trouvé ! Temps total du trajet : %i ", curNode.path_time)
 				retracePath(curNode)
 				break
 
@@ -179,7 +194,9 @@ class PathFinder :
 					continue
 
 				if neighbour in self.openSet:
-					if curNode.g + neighbour.g < neighbour.g :
+					newG = neighbour.returnGscore(self.time_func)
+					#if curNode.g + neighbour.g < neighbour.g :
+					if newG < neighbour.g :
 						neighbour.parent = curNode
 						neighbour.computeScore(self.nodeGoal, self.time_func)
 						logging.debug("(%i,%i) - G : %i - H : %i - in openSet : Yes", neighbour.x, neighbour.y, neighbour.g, neighbour.h)
