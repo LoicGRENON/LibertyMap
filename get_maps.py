@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from lxml import etree	# For XML parsing
-import re
 import os
 import sys
-import cookielib, urllib, urllib2
+import urllib, urllib2
 import astar
-from common import *
-from gui import LM_CACHE_PATH
+from common import ensure_dir, LM_CACHE_PATH
 
 def check_images(img_list) :
 	new_img = set()
@@ -41,14 +39,12 @@ def download_image(img) :
 	else :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
 	img_path = 'http://libertyisland.johndegey.org/' + img
-	print "Récupération de l'image '%s' vers %s" % (img_path, path)
 	try :
 		ensure_dir(path)
 		urllib.urlretrieve(img_path, path)
-		print "Succès"
+		return True
 	except :
-		(exctype, value, traceback) = sys.exc_info()
-		print "Erreur - %s : %s" % (exctype, value)
+		return False
 
 def get_map(xml_file) :
 	# On crée la matrice qui contiendra les infos de la carte

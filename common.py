@@ -12,7 +12,7 @@ APP_WEBSITE     = u'http://libertymap.difoolou.net'
 APP_COPYRIGHT   = u"Copyright © %s Loïc GRENON" % (APP_YEAR)
 # XXX: Put description here
 APP_DESCRIPTION = u"""LibertyMap est un calculateur de trajet pour le jeu de rôle en ligne Pirates-Caraïbes (http://www.pirates-caraibes.com)"""
-  
+
 # license text of this application
 APP_LICENSE     = u"""
 LibertyMap est un logiciel libre ; vous pouvez le redistribuer et/ou
@@ -32,11 +32,33 @@ Boston, MA 02110-1301, États-Unis.
 """
 APP_ICON = "/usr/share/pixmaps/libertymap.png"
 if not os.access(APP_ICON,os.F_OK) :
-	APP_ICON = "pixmaps/libertymap.png"
+    APP_ICON = "pixmaps/libertymap.png"
 if not os.access(APP_ICON,os.F_OK) :
-	APP_ICON = "../pixmaps/libertymap.png"
+    APP_ICON = "../pixmaps/libertymap.png"
+
+
+LM_DIRNAME = 'LibertyMap'
+# Emplacements dépendants de l'OS
+if 'APPDATA' in os.environ:
+    try :
+        from win32com.shell import shellcon, shell #@UnresolvedImport
+        appdata_path = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+    except :
+        appdata_path = os.environ['APPDATA']
+    LM_CONFIG_PATH = os.path.join(appdata_path, LM_DIRNAME)
+    LM_CACHE_PATH = os.path.join(LM_CONFIG_PATH, 'cache')
+elif 'XDG_CONFIG_HOME' in os.environ:
+    LM_CONFIG_PATH = os.path.join(os.environ['XDG_CONFIG_HOME'], LM_DIRNAME)
+    LM_CACHE_PATH = os.path.join(os.environ['XDG_CACHE_HOME'], LM_DIRNAME)
+else:
+    LM_CONFIG_PATH = os.path.join(os.environ['HOME'], '.config', LM_DIRNAME)
+    LM_CACHE_PATH = os.path.join(os.environ['HOME'], '.cache', LM_DIRNAME)
+
+# Autres emplacements
+LM_CONF = os.path.join(LM_CONFIG_PATH, 'LibertyMap.conf')
+LM_MAP = os.path.join(LM_CACHE_PATH, 'map.xml.gz')
 
 def ensure_dir(f):
-	d = os.path.dirname(f)
-	if not os.path.exists(d):
-		os.makedirs(d)
+    d = os.path.dirname(f)
+    if not os.path.exists(d):
+        os.makedirs(d)

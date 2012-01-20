@@ -15,42 +15,21 @@ import urllib2
 import logging
 from common import *
 
-LM_DIRNAME = 'LibertyMap'
-
-# Emplacements dépendants de l'OS
-if 'APPDATA' in os.environ:
-	try :
-		from win32com.shell import shellcon, shell #@UnresolvedImport
-		appdata_path = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
-	except :
-		appdata_path = os.environ['APPDATA']
-	LM_CONFIG_PATH = os.path.join(appdata_path, LM_DIRNAME)
-	LM_CACHE_PATH = os.path.join(LM_CONFIG_PATH, 'cache')
-elif 'XDG_CONFIG_HOME' in os.environ:
-	LM_CONFIG_PATH = os.path.join(os.environ['XDG_CONFIG_HOME'], LM_DIRNAME)
-	LM_CACHE_PATH = os.path.join(os.environ['XDG_CACHE_HOME'], LM_DIRNAME)
-else:
-	LM_CONFIG_PATH = os.path.join(os.environ['HOME'], '.config', LM_DIRNAME)
-	LM_CACHE_PATH = os.path.join(os.environ['HOME'], '.cache', LM_DIRNAME)
-
-# Autres emplacements
-LM_CONF = os.path.join(LM_CONFIG_PATH, 'LibertyMap.conf')
-LM_MAP = os.path.join(LM_CACHE_PATH, 'map.xml.gz')
-
 class MainInterface :
 	window, menu, statusBar = None, None, None
 
 	def __init__(self, config) :
 		self.config = config
 
-		self.logger = LoggingInterface('LibertyMap.log')
+		LoggingInterface('LibertyMap.log')
+		self.logger = logging.getLogger('')
 
 		self.graph = []
 		self.start_x = 0
 		self.start_y = 0
 		self.end_x = 0
 		self.end_y = 0
-		print 'Initialisation de la fenêtre principale...'
+
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.connect("destroy", self.quit)
 		self.window.set_title('Calculateur de trajet')
@@ -142,7 +121,7 @@ class MainInterface :
 		start_time = time.time()
 		path = algo.findPath()
 		get_path_time = time.time() - start_time
-		print "Durée de recherche : %f" % get_path_time
+		self.logger.debug("Durée de recherche : %f" % get_path_time)
 		
 		self.grid.iconview.unselect_all()
 		if len(path) == 0 :
@@ -154,7 +133,7 @@ class MainInterface :
 			dialog.destroy()
 		else :
 			for node in path :
-				print "(%i,%i)" % (node.x,node.y)
+				self.logger.info("(%i,%i)" % (node.x,node.y))
 				self.grid.iconview.select_path(node.x + 121 * node.y)
 
 	def ClearPath_cb(self, widget) :
@@ -234,7 +213,7 @@ class MainInterface :
 
 		# Si la carte n'est pas à jour ou que l'on arrive pas à la lire, on la télécharge
 		if local_md5_mapfile != distant_md5_mapfile or not os.access(LM_MAP, os.F_OK):
-			print "Carte obsolète : Téléchargement de la nouvelle carte en cours ..."
+			self.logger.debug("Carte obsolète : Téléchargement de la nouvelle carte en cours ...")
 			url_req = urllib2.urlopen('http://libertymap.difoolou.net/map.xml.gz')
 			CHUNK = 16 * 1024
 			ensure_dir(LM_MAP)
@@ -260,14 +239,15 @@ class MainInterface :
 		for img in img_list :
 			self.progress_interface.set_progress(i, nb_img)
 			gtk.gdk.threads_enter()
-			get_maps.download_image(img)
+			if not get_maps.download_image(img) :
+				self.logger.error("Echec de téléchargement de l'image %s" % img)
 			gtk.gdk.threads_leave()
 			i += 1.0
 			yield True
 		self.progress_interface.progressbar_img.set_text("Les images sont à jour")
 		self.progress_interface.progressbar_img.set_fraction(1)
 		get_map_time = time.time() - start_time
-		print "Durée de récupération des images : %f" % get_map_time
+		self.logger.debug("Durée de récupération des images : %f" % get_map_time)
 		map_loader = self.loadMap()
 		gobject.idle_add(map_loader.next)
 		yield False
@@ -314,7 +294,7 @@ class MainInterface :
 		self.grid.iconview.set_model(self.grid.listStore)
 		self.grid.iconview.thaw_child_notify()
 		show_map_time = time.time() - start_time
-		print "Durée d'affichage de la carte : %f" % show_map_time
+		self.logger.debug("Durée d'affichage de la carte : %f" % show_map_time)
 		# On retire la fenetre d'affichage de l'avancement des différents téléchargements, chargements, etc ...
 		self.progress_interface.window.destroy()
 		yield False
@@ -325,7 +305,7 @@ class MainInterface :
 		path = iconview.get_cursor()[0]
 		x_coord = liststore.get_value(liststore.get_iter(path), 3)
 		y_coord = liststore.get_value(liststore.get_iter(path), 4)
-		print "Changement des coordonnées de départ : (%i, %i)" % (x_coord, y_coord)
+		self.logger.info("Changement des coordonnées de départ : (%i, %i)" % (x_coord, y_coord))
 		self.start_x = x_coord
 		self.start_y = y_coord
 		#self.startPos = astar.Node(x_coord, y_coord, None, time)
@@ -336,7 +316,7 @@ class MainInterface :
 		path = iconview.get_cursor()[0]
 		x_coord = liststore.get_value(liststore.get_iter(path), 3)
 		y_coord = liststore.get_value(liststore.get_iter(path), 4)
-		print "Changement des coordonnées d'arrivée : (%i, %i)" % (x_coord, y_coord)
+		self.logger.info("Changement des coordonnées d'arrivée : (%i, %i)" % (x_coord, y_coord))
 		self.end_x = x_coord
 		self.end_y = y_coord
 		#self.endPos = astar.Node(x_coord, y_coord, None, time)
