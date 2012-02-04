@@ -146,7 +146,7 @@ class MainInterface :
 		try :
 			reduc_deplacement = self.config.config.getint('talents', 'reduc_deplacement')
 		except :
-			reduc_deplacement = None
+			reduc_deplacement = 0
 
 		try :
 			talent_rodeur = self.config.config.getboolean('talents', 'rodeur')
@@ -178,7 +178,8 @@ class MainInterface :
 		if talent_rodeur :
 			time -= time / 10
 
-		time -= reduc_deplacement
+		if time :	# Le temps d'une case ne peut pas être négatif
+			time -= reduc_deplacement
 
 		return time
 
