@@ -141,6 +141,35 @@ class MainInterface :
 
 	def Prefs_cb(self, widget) :
 		PrefsInterface(self.window, self.config)
+		
+	def Scrot_cb(self, widget):
+		file_chooser = gtk.FileChooserDialog("Capture du trajet", self.window, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+		file_chooser.set_do_overwrite_confirmation(True)
+		file_chooser.set_current_name("Trajet.png")
+
+		file_filter = gtk.FileFilter()
+		file_filter.set_name("PNG")
+		file_filter.add_mime_type("image/png")
+		file_filter.add_pattern("*.png")
+		file_chooser.add_filter(file_filter)
+		
+		file_filter = gtk.FileFilter()
+		file_filter.set_name("All files")
+		file_filter.add_pattern("*")
+		file_chooser.add_filter(file_filter)
+		
+		response = file_chooser.run()
+		if response == gtk.RESPONSE_OK:
+			filename = file_chooser.get_filename()
+			if not filename.endswith('.png') :
+				filename += '.png'
+		
+			width, height = self.window.get_size()
+			pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, width, height)
+			screenshot = pixbuf.get_from_drawable(self.window.window, self.window.get_colormap(), 0, 0, 0, 0, width, height)
+			screenshot.save(filename, 'png')
+
+		file_chooser.destroy()
 
 	def compute_effective_time(self, time) :
 		try :
@@ -468,9 +497,16 @@ class ToolBarInterface :
 		self.tool_bar.insert(clear_path_b, 1)
 
 		prefs_b = gtk.ToolButton(gtk.STOCK_PREFERENCES)
+		prefs_b.set_label("Préférences")
 		prefs_b.set_tooltip_text("Modifier les préférences")
 		prefs_b.connect("clicked", data.Prefs_cb)
 		self.tool_bar.insert(prefs_b, 2)
+		
+		scrot_b = gtk.ToolButton(gtk.STOCK_SAVE_AS)
+		scrot_b.set_label("Capture")
+		scrot_b.set_tooltip_text("Prendre une capture d'écran")
+		scrot_b.connect("clicked", data.Scrot_cb)
+		self.tool_bar.insert(scrot_b, 3)
 
 class About :
 	"Fenêtre about"
