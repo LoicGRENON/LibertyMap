@@ -52,12 +52,14 @@ class Node :
 			self.h = self.returnHscore(nodeGoal)
 		else :
 			self.g = 0
+			self.path_time = 0
 			if self.is_start :
 				self.h = self.returnHscore(nodeGoal)
 			else :
 				self.h = 0
 
-		self.f = self.g + self.h
+	#	self.f = self.g + self.h
+		self.f = self.path_time + self.h
 
 	def returnGscore(self, time_func=None) :
 		if self.parent :
@@ -186,7 +188,8 @@ class PathFinder :
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.is_end :
-				logging.debug("Chemin trouvé ! Temps total du trajet : %i ", curNode.path_time)
+				hours, minutes = divmod(curNode.path_time, 60)
+				logging.debug("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
 				retracePath(curNode)
 				break
 
