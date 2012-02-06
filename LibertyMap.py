@@ -142,7 +142,7 @@ class MainInterface :
 	def Prefs_cb(self, widget) :
 		PrefsInterface(self.window, self.config)
 		
-	def Scrot_cb(self, widget):
+	def Scrot_cb(self, widget) :
 		file_chooser = gtk.FileChooserDialog("Capture du trajet", self.window, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
 		file_chooser.set_do_overwrite_confirmation(True)
 		file_chooser.set_current_name("Trajet.png")
@@ -159,8 +159,13 @@ class MainInterface :
 		file_chooser.add_filter(file_filter)
 		
 		response = file_chooser.run()
+		result = ""
 		if response == gtk.RESPONSE_OK:
-			filename = file_chooser.get_filename()
+			result = file_chooser.get_filename()
+		file_chooser.destroy()
+		
+		if result != "" :
+			filename, extension = os.path.splitext(result)
 			if not filename.endswith('.png') :
 				filename += '.png'
 		
@@ -168,8 +173,6 @@ class MainInterface :
 			pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, width, height)
 			screenshot = pixbuf.get_from_drawable(self.window.window, self.window.get_colormap(), 0, 0, 0, 0, width, height)
 			screenshot.save(filename, 'png')
-
-		file_chooser.destroy()
 
 	def compute_effective_time(self, time) :
 		try :
@@ -206,9 +209,11 @@ class MainInterface :
 
 		if talent_rodeur :
 			time -= time / 10
-
-		if time :	# Le temps d'une case ne peut pas être négatif
-			time -= reduc_deplacement
+		
+		time -= reduc_deplacement
+		
+		if time < 0 :	# Le temps d'une case ne peut pas être négatif
+			time = 0
 
 		return time
 
