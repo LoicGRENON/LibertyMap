@@ -111,7 +111,8 @@ class MainInterface :
 			time = self.grid.listStore.get_value(self.grid.listStore.get_iter(item[0]),0)
 			time = self.compute_effective_time(int(time))
 			path_time += time
-		self.statusBar.addText("Temps du trajet : "+str(path_time)+"mins")
+		hours, minutes = divmod(path_time, 60)
+		self.statusBar.addText("Temps du trajet sélectionné : %ih%imin" % (hours, minutes))
 
 	def CalcPath_cb(self, widget) :
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
@@ -132,9 +133,14 @@ class MainInterface :
 			dialog.run()
 			dialog.destroy()
 		else :
+			hours, minutes = divmod(algo.path_time, 60)
+			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
+			
 			for node in path :
 				self.logger.info("(%i,%i)" % (node.x,node.y))
 				self.grid.iconview.select_path(node.x + 121 * node.y)
+				
+			self.statusBar.addText("Temps du trajet : %ih%imin" % (hours, minutes))
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()

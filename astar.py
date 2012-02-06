@@ -22,6 +22,7 @@ class Node :
 		self.path_time = 0
 		self.img_base = img_base
 		self.img_decor = img_decor
+		self.path_time = 0
 
 		if self.time == 100 :
 			self.walkable = False
@@ -128,6 +129,7 @@ class PathFinder :
 		self.closeSet = set()
 
 		self.nodeGoal = graph[y_end][x_end]
+		self.path_time = 0
 
 		logging.basicConfig(
 			filename='debug.log',
@@ -186,6 +188,7 @@ class PathFinder :
 
 			# Stopper la boucle si curNode est le noeud d'arrivée
 			if curNode.is_end :
+				self.path_time = curNode.path_time
 				hours, minutes = divmod(curNode.path_time, 60)
 				logging.debug("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
 				retracePath(curNode)
