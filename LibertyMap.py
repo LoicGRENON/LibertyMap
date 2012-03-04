@@ -119,6 +119,10 @@ class MainInterface :
 		self.path_detail.set_label('')
 
 	def CalcPath_cb(self, widget) :
+		widget.set_sensitive(False)
+		thread.start_new_thread(self.findPath, (widget,))
+		
+	def findPath(self, widget):
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
 		graph[self.start_y][self.start_x].is_start = True
 		graph[self.end_y][self.end_x].is_end = True
@@ -132,10 +136,12 @@ class MainInterface :
 		if len(path) == 0 :
 			title = "Trajet impossible"
 			message = "Il n'y a pas de chemin possible de (%i,%i) vers (%i,%i)." % (self.start_x, self.start_y, self.end_x, self.end_y)
+			gtk.gdk.threads_enter()
 			dialog = gtk.MessageDialog(parent=self.window, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format=title)
 			dialog.format_secondary_text(message)
 			dialog.run()
 			dialog.destroy()
+			gtk.gdk.threads_leave()
 		else :
 			hours, minutes = divmod(algo.path_time, 60)
 			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
@@ -148,15 +154,20 @@ class MainInterface :
 					cases[node.time] = 1
 					
 				self.logger.info("(%i,%i) : %i min" % (node.x,node.y,node.time))
+				gtk.gdk.threads_enter()
 				self.grid.iconview.select_path(node.x + 121 * node.y)
+				gtk.gdk.threads_leave()
 			
 			detail = ''
 			for tile_time in sorted(cases.iterkeys()):
 				if tile_time != 0 :
 					detail += str(cases[tile_time]) + '*' + str(tile_time) + ' + '
 			
+			gtk.gdk.threads_enter()
 			self.path_time.set_label("Temps du trajet : %ih%imin" % (hours, minutes))
 			self.path_detail.set_label(detail[:-3])
+			widget.set_sensitive(True)
+			gtk.gdk.threads_leave()
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
