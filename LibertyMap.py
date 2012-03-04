@@ -416,13 +416,13 @@ class LoggingInterface :
 			format='%(asctime)s %(levelname)s - %(message)s',
 			datefmt='%d/%m/%Y %H:%M:%S',
 			)
-		console = logging.StreamHandler()
+#		console = logging.StreamHandler()
 		# set a format which is simpler for console use
-		formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+#		formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 		# tell the handler to use this format
-		console.setFormatter(formatter)
+#		console.setFormatter(formatter)
 		# add the handler to the root logger
-		logging.getLogger('').addHandler(console)
+#		logging.getLogger('').addHandler(console)
 
 class GridInterface :
 
