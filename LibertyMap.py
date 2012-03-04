@@ -146,15 +146,12 @@ class MainInterface :
 		self.logger.debug("Durée de recherche : %f" % get_path_time)
 		
 		self.grid.iconview.unselect_all()
+		
 		if len(path) == 0 :
+			message_type = gtk.MESSAGE_ERROR
 			title = "Trajet impossible"
 			message = "Il n'y a pas de chemin possible de (%i,%i) vers (%i,%i)." % (self.start_x, self.start_y, self.end_x, self.end_y)
-			gtk.gdk.threads_enter()
-			dialog = gtk.MessageDialog(parent=self.window, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format=title)
-			dialog.format_secondary_text(message)
-			dialog.run()
-			dialog.destroy()
-			gtk.gdk.threads_leave()
+			gobject.idle_add(self.show_dialog, message_type, title, message)
 		else :
 			hours, minutes = divmod(algo.path_time, 60)
 			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
@@ -177,13 +174,21 @@ class MainInterface :
 					detail += str(cases[tile_time]) + '*' + str(tile_time) + ' + '
 			
 			gtk.gdk.threads_enter()
-			spinner.stop()
 			self.path_time.set_label("Temps du trajet : %ih%imin" % (hours, minutes))
 			self.path_detail.set_label(detail[:-3])
 			gtk.gdk.threads_leave()
 			
-		gtk.gdk.threads_enter()	
+		gtk.gdk.threads_enter()
+		spinner.stop()
 		widget.set_sensitive(True)
+		gtk.gdk.threads_leave()
+		
+	def show_dialog(self, message_type, title, message):
+		gtk.gdk.threads_enter()
+		dialog = gtk.MessageDialog(parent=self.window, type=message_type, buttons=gtk.BUTTONS_OK, message_format=title)
+		dialog.format_secondary_text(message)
+		dialog.run()
+		dialog.destroy()
 		gtk.gdk.threads_leave()
 
 	def ClearPath_cb(self, widget) :
