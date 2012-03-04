@@ -129,6 +129,13 @@ class MainInterface :
 		thread.start_new_thread(self.findPath, (widget,))
 		
 	def findPath(self, widget):
+		gtk.gdk.threads_enter()
+		spinner = gtk.Spinner()
+		self.path_time.set_icon_widget(spinner)
+		self.path_time.set_label('Recherche du trajet en cours ...')
+		spinner.start()
+		gtk.gdk.threads_leave()
+		
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
 		graph[self.start_y][self.start_x].is_start = True
 		graph[self.end_y][self.end_x].is_end = True
@@ -170,6 +177,7 @@ class MainInterface :
 					detail += str(cases[tile_time]) + '*' + str(tile_time) + ' + '
 			
 			gtk.gdk.threads_enter()
+			spinner.stop()
 			self.path_time.set_label("Temps du trajet : %ih%imin" % (hours, minutes))
 			self.path_detail.set_label(detail[:-3])
 			widget.set_sensitive(True)
@@ -447,7 +455,7 @@ class ProgressInterface :
 
 	def __init__(self, parent_window) :
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_default_size(400, 400)
+		self.window.set_default_size(400, 100)
 		self.window.set_deletable(False)
 		self.window.set_transient_for(parent_window)
 		self.window.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
@@ -539,19 +547,19 @@ class ToolBarInterface :
 		clear_path_b.set_tooltip_text("Effacer le trajet courant")
 		clear_path_b.connect("clicked", data.ClearPath_cb)
 		self.tool_bar.insert(clear_path_b, 1)
-
-		prefs_b = gtk.ToolButton(gtk.STOCK_PREFERENCES)
-		prefs_b.set_label("Préférences")
-		prefs_b.set_tooltip_text("Modifier les préférences")
-		prefs_b.connect("clicked", data.Prefs_cb)
-		self.tool_bar.insert(prefs_b, 2)
 		
 		scrot_b = gtk.ToolButton(gtk.STOCK_SAVE_AS)
 		scrot_b.set_label("Capture")
 		scrot_b.set_tooltip_text("Prendre une capture d'écran")
 		scrot_b.connect("clicked", data.Scrot_cb)
-		self.tool_bar.insert(scrot_b, 3)
+		self.tool_bar.insert(scrot_b, 2)
 
+		prefs_b = gtk.ToolButton(gtk.STOCK_PREFERENCES)
+		prefs_b.set_label("Préférences")
+		prefs_b.set_tooltip_text("Modifier les préférences")
+		prefs_b.connect("clicked", data.Prefs_cb)
+		self.tool_bar.insert(prefs_b, 3)
+		
 class About :
 	"Fenêtre about"
 
