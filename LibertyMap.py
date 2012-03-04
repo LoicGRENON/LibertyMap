@@ -48,14 +48,20 @@ class MainInterface :
 
 		# Grille
 		self.grid = GridInterface(self)
-		self.grid.iconview.connect("item-activated", self.onActiveItem)
 		self.grid.iconview.connect("selection-changed", self.onSelectionChange)
 		self.grid.iconview.connect("button-press-event", self.onButtonPressEvent)
 		vbox.pack_start(self.grid.gridBox, True, True)
 
 		# Barre d'état
-		self.statusBar = StatusBarInterface(self)
-		vbox.pack_start(self.statusBar.status_bar, False, False, 0)
+		status_bar = gtk.Toolbar()
+		status_bar.set_style(gtk.TOOLBAR_BOTH)
+		self.path_time = gtk.ToolButton()
+		status_bar.insert(self.path_time, 0)
+		sep = gtk.SeparatorToolItem()
+		status_bar.insert(sep, 1)
+		self.path_detail = gtk.ToolButton()
+		status_bar.insert(self.path_detail, 2)
+		vbox.pack_start(status_bar, False, False, 0)
 
 		self.window.show_all()
 
@@ -70,9 +76,6 @@ class MainInterface :
 
 	def quit(self, widget, data=None) :
 		gtk.main_quit()
-
-	def onActiveItem(self, widget, path) :
-		self.statusBar.addText(str(path[0]))
 
 	def onButtonPressEvent(self, iconview, event):
 		if event.button == 3:
@@ -112,7 +115,8 @@ class MainInterface :
 			time = self.compute_effective_time(int(time))
 			path_time += time
 		hours, minutes = divmod(path_time, 60)
-		self.statusBar.addText("Temps du trajet sélectionné : %ih%imin" % (hours, minutes))
+		self.path_time.set_label("Temps du trajet sélectionné : %ih%imin" % (hours, minutes))
+		self.path_detail.set_label('')
 
 	def CalcPath_cb(self, widget) :
 		graph = copy.deepcopy(self.graph)	# On fait une copie du graphe pour ne pas modifier l'original
@@ -136,11 +140,23 @@ class MainInterface :
 			hours, minutes = divmod(algo.path_time, 60)
 			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
 			
+			cases = {}
 			for node in path :
-				self.logger.info("(%i,%i)" % (node.x,node.y))
+				if node.time in cases :
+					cases[node.time] += 1
+				else :
+					cases[node.time] = 1
+					
+				self.logger.info("(%i,%i) : %i min" % (node.x,node.y,node.time))
 				self.grid.iconview.select_path(node.x + 121 * node.y)
-				
-			self.statusBar.addText("Temps du trajet : %ih%imin" % (hours, minutes))
+			
+			detail = ''
+			for tile_time in sorted(cases.iterkeys()):
+				if tile_time != 0 :
+					detail += str(cases[tile_time]) + '*' + str(tile_time) + ' + '
+			
+			self.path_time.set_label("Temps du trajet : %ih%imin" % (hours, minutes))
+			self.path_detail.set_label(detail[:-3])
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
@@ -664,14 +680,17 @@ class PrefsInterface :
 		self.window.destroy()
 
 	def update(self, button, config) :
+		if not config.config.has_section("general") :
+			config.config.add_section("general")
+			
 		if not config.config.has_section("talents") :
 			config.config.add_section("talents")
-
 		config.config.set("talents", "rodeur", self.talt_rodeur_btn.get_active())
 		config.config.set("talents", "grimpeur", self.talt_grimpeur_btn.get_active())
 		config.config.set("talents", "aventurier", self.talt_aventurier_btn.get_active())
 		config.config.set("talents", "randonneur", self.talt_randonneur_btn.get_active())
 		config.config.set("talents", "reduc_deplacement", int(self.reduc_depl.get_value()))
+		
 		config.write()
 
 		# On charge la nouvelle configuration
