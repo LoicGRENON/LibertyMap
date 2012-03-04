@@ -56,10 +56,12 @@ class MainInterface :
 		status_bar = gtk.Toolbar()
 		status_bar.set_style(gtk.TOOLBAR_BOTH)
 		self.path_time = gtk.ToolButton()
+		self.path_time.connect("clicked", self.copy2clipboard)
 		status_bar.insert(self.path_time, 0)
 		sep = gtk.SeparatorToolItem()
 		status_bar.insert(sep, 1)
 		self.path_detail = gtk.ToolButton()
+		self.path_detail.connect("clicked", self.copy2clipboard)
 		status_bar.insert(self.path_detail, 2)
 		vbox.pack_start(status_bar, False, False, 0)
 
@@ -117,7 +119,11 @@ class MainInterface :
 		hours, minutes = divmod(path_time, 60)
 		self.path_time.set_label("Temps du trajet sélectionné : %ih%imin" % (hours, minutes))
 		self.path_detail.set_label('')
-
+		
+	def copy2clipboard(self, widget):
+		clipboard = widget.get_clipboard(gtk.gdk.SELECTION_CLIPBOARD)
+		clipboard.set_text(widget.get_label())
+		
 	def CalcPath_cb(self, widget) :
 		widget.set_sensitive(False)
 		thread.start_new_thread(self.findPath, (widget,))
