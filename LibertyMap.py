@@ -180,8 +180,11 @@ class MainInterface :
 			spinner.stop()
 			self.path_time.set_label("Temps du trajet : %ih%imin" % (hours, minutes))
 			self.path_detail.set_label(detail[:-3])
-			widget.set_sensitive(True)
 			gtk.gdk.threads_leave()
+			
+		gtk.gdk.threads_enter()	
+		widget.set_sensitive(True)
+		gtk.gdk.threads_leave()
 
 	def ClearPath_cb(self, widget) :
 		self.grid.iconview.unselect_all()
