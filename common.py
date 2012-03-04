@@ -57,6 +57,7 @@ else:
 # Autres emplacements
 LM_CONF = os.path.join(LM_CONFIG_PATH, 'LibertyMap.conf')
 LM_MAP = os.path.join(LM_CACHE_PATH, 'map.xml.gz')
+LM_LOG = os.path.join(LM_CACHE_PATH, 'LibertyMap.log')
 
 def ensure_dir(f):
     d = os.path.dirname(f)

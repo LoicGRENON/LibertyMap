@@ -21,7 +21,7 @@ class MainInterface :
 	def __init__(self, config) :
 		self.config = config
 
-		LoggingInterface('LibertyMap.log')
+		LoggingInterface(LM_LOG)
 		self.logger = logging.getLogger('')
 
 		self.graph = []
