@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 
 APP_NAME        = u'LibertyMap'
 APP_VERSION     = u'1.0'
@@ -57,7 +58,25 @@ else:
 # Autres emplacements
 LM_CONF = os.path.join(LM_CONFIG_PATH, 'LibertyMap.conf')
 LM_MAP = os.path.join(LM_CACHE_PATH, 'map.xml.gz')
-LM_LOG = os.path.join(LM_CACHE_PATH, 'LibertyMap.log')
+LM_LOG = os.path.join(LM_CONFIG_PATH, 'LibertyMap.log')
+
+# Detect if we're running on Windows
+win32 = sys.platform.startswith("win")
+# Detect if we're running a packed exe created with py2exe
+py2exe = False
+if win32 and hasattr(sys, 'frozen'):
+    py2exe = True
+
+if win32 and py2exe:
+    LM_ERROR_LOG = os.path.join(LM_CONFIG_PATH, 'LibertyMap_error.log')
+    try:
+        sys.stdout = open(LM_ERROR_LOG, "w")
+    except:
+        print('Failed to close stdout (not so bad if you are using PyInstaller)')
+    try:
+        sys.stderr = open(LM_ERROR_LOG, "w")
+    except:
+        print('Failed to close stderr (not so bad if you are using PyInstaller)')
 
 def ensure_dir(f):
     d = os.path.dirname(f)
