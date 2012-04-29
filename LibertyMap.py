@@ -126,6 +126,7 @@ class MainInterface :
 		
 	def CalcPath_cb(self, widget) :
 		widget.set_sensitive(False)
+		self.grid.iconview.unselect_all()
 		thread.start_new_thread(self.findPath, (widget,))
 		
 	def findPath(self, widget):
@@ -133,6 +134,7 @@ class MainInterface :
 		spinner = gtk.Spinner()
 		self.path_time.set_icon_widget(spinner)
 		self.path_time.set_label('Recherche du trajet en cours ...')
+		spinner.show()
 		spinner.start()
 		gtk.gdk.threads_leave()
 		
@@ -143,9 +145,10 @@ class MainInterface :
 		start_time = time.time()
 		path = algo.findPath()
 		get_path_time = time.time() - start_time
-		self.logger.debug("Durée de recherche : %f" % get_path_time)
 		
-		self.grid.iconview.unselect_all()
+		gtk.gdk.threads_enter()
+		self.logger.debug("Durée de recherche : %f" % get_path_time)
+		gtk.gdk.threads_leave()
 		
 		if len(path) == 0 :
 			message_type = gtk.MESSAGE_ERROR
@@ -154,7 +157,9 @@ class MainInterface :
 			gobject.idle_add(self.show_dialog, message_type, title, message)
 		else :
 			hours, minutes = divmod(algo.path_time, 60)
+			gtk.gdk.threads_enter()
 			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
+			gtk.gdk.threads_leave()
 			
 			cases = {}
 			for node in path :
@@ -163,8 +168,8 @@ class MainInterface :
 				else :
 					cases[node.time] = 1
 					
-				self.logger.info("(%i,%i) : %i min" % (node.x,node.y,node.time))
 				gtk.gdk.threads_enter()
+				self.logger.info("(%i,%i) : %i min" % (node.x,node.y,node.time))
 				self.grid.iconview.select_path(node.x + 121 * node.y)
 				gtk.gdk.threads_leave()
 			
@@ -180,6 +185,7 @@ class MainInterface :
 			
 		gtk.gdk.threads_enter()
 		spinner.stop()
+		self.path_time.set_icon_widget(None)
 		widget.set_sensitive(True)
 		gtk.gdk.threads_leave()
 		
@@ -371,7 +377,11 @@ class MainInterface :
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
 				coord = str(col.x) + "," + str(col.y)
-				tooltip = coord + " (" + str(col.time) + " mins)"
+				
+				if col.passage_name :
+					tooltip = coord + " (" + str(col.time) + " mins) - " + str(col.passage_name.encode('latin-1'))
+				else :
+					tooltip = coord + " (" + str(col.time) + " mins)"
 				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])
 
 				self.progress_interface.progressbar_map.set_fraction(i/nb_tiles)

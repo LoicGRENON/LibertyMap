@@ -60,6 +60,7 @@ def get_map(xml_file) :
 		img_base = None
 		img_decor = None
 		passage = False
+		passage_name = None
 
 		if time == None :
 			time = 100
@@ -74,8 +75,9 @@ def get_map(xml_file) :
 				img_list.add(decor_src)
 			elif child.tag == "is_passage" :
 				passage = True
+				passage_name = child.attrib.get('name')
 			
-		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_base, img_decor = img_decor, passage = passage)
+		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_base, img_decor = img_decor, passage = passage, passage_name = passage_name)
 
 	return (grid, img_list)
 
