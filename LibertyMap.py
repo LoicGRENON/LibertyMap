@@ -12,6 +12,7 @@ import ConfigParser
 import astar
 import copy
 import urllib2
+import re
 import logging
 from common import *
 
@@ -29,6 +30,8 @@ class MainInterface :
 		self.start_y = 0
 		self.end_x = 0
 		self.end_y = 0
+		self.extra_time_start = 0
+		self.extra_time_end = 0
 
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.connect("destroy", self.quit)
@@ -91,7 +94,10 @@ class MainInterface :
 				iconview.select_path(path)
 
 				# Menu clic droit
-				popup_menu = PopupMenu(self)
+				tooltip = self.grid.listStore.get_value(self.grid.listStore.get_iter(path), 2)
+				pattern = r"[0-9]*,[0-9]* \([0-9]* mins\) - vers Tour.*"
+
+				popup_menu = PopupMenu(self, True) if re.match(pattern, tooltip) else PopupMenu(self)
 				popup_menu = popup_menu.popup_menu
 				popup_menu.attach_to_widget(self.grid.iconview, None)
 				popup_menu.popup(None, None, None, event.button, event.time)
@@ -156,7 +162,8 @@ class MainInterface :
 			message = "Il n'y a pas de chemin possible de (%i,%i) vers (%i,%i)." % (self.start_x, self.start_y, self.end_x, self.end_y)
 			gobject.idle_add(self.show_dialog, message_type, title, message)
 		else :
-			hours, minutes = divmod(algo.path_time, 60)
+			path_time = algo.path_time + self.extra_time_start + self.extra_time_end
+			hours, minutes = divmod(path_time, 60)
 			gtk.gdk.threads_enter()
 			self.logger.info("Chemin trouvé ! Temps total du trajet : %ih%imin", hours, minutes)
 			gtk.gdk.threads_leave()
@@ -236,6 +243,9 @@ class MainInterface :
 			screenshot.save(filename, 'png')
 
 	def compute_effective_time(self, time) :
+		if time == 0 :	# Si la case a un coût nul, il n'y a pas de réduction possible
+			return 0
+
 		try :
 			reduc_deplacement = self.config.config.getint('talents', 'reduc_deplacement')
 		except :
@@ -273,8 +283,8 @@ class MainInterface :
 		
 		time -= reduc_deplacement
 		
-		if time < 0 :	# Le temps d'une case ne peut pas être négatif
-			time = 0
+		if time < 1 :	# Le temps d'une case ne peut pas être négatif ou nul
+			time = 1
 
 		return time
 
@@ -399,7 +409,7 @@ class MainInterface :
 		self.progress_interface.window.destroy()
 		yield False
 
-	def onChangeStartPos(self, widget, data=None) :
+	def onChangeStartPos(self, widget, extra_tiles=None) :
 		iconview = widget.get_parent().get_attach_widget()
 		liststore = iconview.get_model()
 		path = iconview.get_cursor()[0]
@@ -409,8 +419,12 @@ class MainInterface :
 		self.start_x = x_coord
 		self.start_y = y_coord
 		#self.startPos = astar.Node(x_coord, y_coord, None, time)
+		self.extra_time_start = 0
+		if extra_tiles :
+			for tile_time, tile_nb in extra_tiles.items() :
+				self.extra_time_start += tile_nb * self.compute_effective_time(tile_time)
 
-	def onChangeEndPos(self, widget, data=None) :
+	def onChangeEndPos(self, widget, extra_tiles=None) :
 		iconview = widget.get_parent().get_attach_widget()
 		liststore = iconview.get_model()
 		path = iconview.get_cursor()[0]
@@ -420,6 +434,10 @@ class MainInterface :
 		self.end_x = x_coord
 		self.end_y = y_coord
 		#self.endPos = astar.Node(x_coord, y_coord, None, time)
+		self.extra_time_end = 0
+		if extra_tiles :
+			for tile_time, tile_nb in extra_tiles.items() :
+				self.extra_time_end += tile_nb * self.compute_effective_time(tile_time)
 
 class LoggingInterface :
 
@@ -498,18 +516,54 @@ class ProgressInterface :
 
 class PopupMenu :
 
-	def __init__(self, data) :
+	def __init__(self, data, tour=False) :
 		self.popup_menu = gtk.Menu()
+		if tour :
+			popup_item = gtk.MenuItem("Départ depuis le bas de la tour")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeStartPos)
+			popup_item.show()
 
-		popup_item = gtk.MenuItem("Départ")
-		self.popup_menu.append(popup_item)
-		popup_item.connect("activate", data.onChangeStartPos)
-		popup_item.show()
+			popup_item = gtk.MenuItem("Départ depuis l'hosto")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeStartPos, {15:18, 1:6})
+			popup_item.show()
 
-		popup_item = gtk.MenuItem("Arrivée")
-		self.popup_menu.append(popup_item)
-		popup_item.connect("activate", data.onChangeEndPos)
-		popup_item.show()
+			popup_item = gtk.MenuItem("Arrivée en bas de la tour")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos)
+			popup_item.show()
+
+			popup_item = gtk.MenuItem("Arrivée sur un point du bas")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos, {15:9})
+			popup_item.show()
+
+			popup_item = gtk.MenuItem("Arrivée sur le point milieu")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos, {15:11})
+			popup_item.show()
+
+			popup_item = gtk.MenuItem("Arrivée sur un point du haut")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos, {15:14})
+			popup_item.show()
+
+			popup_item = gtk.MenuItem("Arrivée sur le point extérieur")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos, {15:18})
+			popup_item.show()
+
+		else :
+			popup_item = gtk.MenuItem("Départ")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeStartPos)
+			popup_item.show()
+
+			popup_item = gtk.MenuItem("Arrivée")
+			self.popup_menu.append(popup_item)
+			popup_item.connect("activate", data.onChangeEndPos)
+			popup_item.show()
 
 class MenuInterface :
 

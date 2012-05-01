@@ -23,7 +23,6 @@ class Node :
 		self.path_time = 0
 		self.img_base = img_base
 		self.img_decor = img_decor
-		self.path_time = 0
 
 		if self.time == 100 :
 			self.walkable = False
