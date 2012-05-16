@@ -389,7 +389,7 @@ class MainInterface :
 				coord = str(col.x) + "," + str(col.y)
 				
 				if col.passage_name :
-					tooltip = coord + " (" + str(col.time) + " mins) - " + str(col.passage_name.encode('latin-1'))
+					tooltip = coord + " - " + str(col.passage_name.encode('latin-1'))
 				else :
 					tooltip = coord + " (" + str(col.time) + " mins)"
 				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])
