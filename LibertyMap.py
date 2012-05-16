@@ -382,6 +382,13 @@ class MainInterface :
 						pixbuf_decor = gtk.gdk.pixbuf_new_from_file(image_path)
 						pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
 
+				# S'il y a un PNJ pour cette case, on l'affiche par dessus le décor
+				if col.img_pnj != None :
+					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_pnj)
+					if os.access(image_path, os.F_OK) :
+						pixbuf_pnj = gtk.gdk.pixbuf_new_from_file(image_path)
+						pixbuf_pnj.composite(pixbuf, 0, 0, pixbuf_pnj.props.width, pixbuf_pnj.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
+
 				# Si la case est un changement de zone, on modifie son apparence
 				if col.passage :
 					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
@@ -390,6 +397,8 @@ class MainInterface :
 				
 				if col.passage_name :
 					tooltip = coord + " - " + str(col.passage_name.encode('latin-1'))
+				elif col.pnj_name :
+					tooltip = coord + " - " + str(col.pnj_name)
 				else :
 					tooltip = coord + " (" + str(col.time) + " mins)"
 				self.grid.listStore.append([col.time, pixbuf, tooltip, col.x, col.y])

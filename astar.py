@@ -7,7 +7,7 @@ class Node :
 	'''
 	A class representing a tile of the course
 	'''
-	def __init__(self, x, y, nodeGoal=None, parent=None, is_start=False, is_end=False, g=0, h=0, f=0, walkable=True, passage=False, passage_name=None, time=100, img_base=None, img_decor=None):
+	def __init__(self, x, y, nodeGoal=None, parent=None, is_start=False, is_end=False, g=0, h=0, f=0, walkable=True, passage=False, passage_name=None, time=100, img_base=None, img_decor=None, img_pnj=None, pnj_name = None):
 		self.x = x
 		self.y = y
 		self.parent = parent
@@ -23,6 +23,8 @@ class Node :
 		self.path_time = 0
 		self.img_base = img_base
 		self.img_decor = img_decor
+		self.img_pnj = img_pnj
+		self.pnj_name = pnj_name
 
 		if self.time == 100 :
 			self.walkable = False

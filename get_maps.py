@@ -59,6 +59,8 @@ def get_map(xml_file) :
 		time = element.attrib.get('time')
 		img_base = None
 		img_decor = None
+		img_pnj = None
+		pnj_name = None
 		passage = False
 		passage_name = None
 
@@ -73,11 +75,16 @@ def get_map(xml_file) :
 				decor_src = child.attrib.get('src')
 				img_decor = os.sep.join(decor_src.split('/'))
 				img_list.add(decor_src)
+			elif child.tag == "PNJ" :
+				img_pnj_src = child.attrib.get('src')
+				img_pnj = os.sep.join(img_pnj_src.split('/'))
+				img_list.add(img_pnj)
+				pnj_name = child.attrib.get('name')
 			elif child.tag == "is_passage" :
 				passage = True
 				passage_name = child.attrib.get('name')
 			
-		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_base, img_decor = img_decor, passage = passage, passage_name = passage_name)
+		grid[y][x] = astar.Node(x, y, time=int(time), img_base = img_base, img_decor = img_decor, img_pnj = img_pnj, pnj_name = pnj_name, passage = passage, passage_name = passage_name)
 
 	return (grid, img_list)
 
