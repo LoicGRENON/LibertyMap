@@ -23,7 +23,7 @@ def download_images(img_list) :
 			path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
 		else :
 			path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
-		img_path = 'http://libertyisland.johndegey.org/' + img
+		img_path = 'http://www.pirates-caraibes.com/' + img
 		print "Récupération de l'image '%s' vers %s" % (img_path, path)
 		try :
 			ensure_dir(path)
@@ -38,7 +38,7 @@ def download_image(img) :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
 	else :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
-	img_path = 'http://libertyisland.johndegey.org/' + img
+	img_path = 'http://pirates-caraibes.com/' + img
 	try :
 		ensure_dir(path)
 		urllib.urlretrieve(img_path, path)
@@ -48,7 +48,7 @@ def download_image(img) :
 
 def get_map(xml_file) :
 	# On crée la matrice qui contiendra les infos de la carte
-	grid = [[astar.Node(col, row) for col in range(121)] for row in range(139)]
+	grid = [[astar.Node(col, row) for col in range(190)] for row in range(150)]
 	img_list = set()
 
 	tree = etree.parse(xml_file)

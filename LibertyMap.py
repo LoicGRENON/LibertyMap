@@ -177,7 +177,7 @@ class MainInterface :
 					
 				gtk.gdk.threads_enter()
 				self.logger.info("(%i,%i) : %i min" % (node.x,node.y,node.time))
-				self.grid.iconview.select_path(node.x + 121 * node.y)
+				self.grid.iconview.select_path(node.x + 190 * node.y)
 				gtk.gdk.threads_leave()
 			
 			detail = ''
@@ -478,7 +478,7 @@ class GridInterface :
 		self.listStore = gtk.ListStore(gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_INT, gobject.TYPE_INT)
 		iconview = gtk.IconView()
 		iconview.set_tooltip_column(2)
-		iconview.set_columns(121)
+		iconview.set_columns(190)
 		iconview.set_margin(0)
 		iconview.set_spacing(0)
 		iconview.set_row_spacing(0)
