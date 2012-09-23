@@ -396,7 +396,7 @@ class MainInterface :
 				coord = str(col.x) + "," + str(col.y)
 				
 				if col.passage_name :
-					tooltip = coord + " - " + str(col.passage_name.encode('latin-1'))
+					tooltip = coord + " - " + str(col.passage_name)
 				elif col.pnj_name :
 					tooltip = coord + " - " + str(col.pnj_name)
 				else :
