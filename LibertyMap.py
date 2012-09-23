@@ -371,7 +371,7 @@ class MainInterface :
 			for col in row :	# col is an astar.Node instance
 				if col.img_base != None :
 					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_base)
-					pixbuf = gtk.gdk.pixbuf_new_from_file(image_path) if os.access(image_path, os.F_OK) else missing_pixbuf	
+					pixbuf = gtk.gdk.pixbuf_new_from_file(image_path).scale_simple(32, 32, gtk.gdk.INTERP_NEAREST) if os.access(image_path, os.F_OK) else missing_pixbuf
 				else :
 					pixbuf = missing_pixbuf
 
@@ -380,18 +380,18 @@ class MainInterface :
 					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_decor)
 					if os.access(image_path, os.F_OK) :
 						pixbuf_decor = gtk.gdk.pixbuf_new_from_file(image_path)
-						pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
+						pixbuf_decor.composite(pixbuf, 0, 0, pixbuf_decor.props.width, pixbuf_decor.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_NEAREST, 255)
 
 				# S'il y a un PNJ pour cette case, on l'affiche par dessus le décor
 				if col.img_pnj != None :
 					image_path = os.path.join(LM_CACHE_PATH,"media" + os.sep + col.img_pnj)
 					if os.access(image_path, os.F_OK) :
 						pixbuf_pnj = gtk.gdk.pixbuf_new_from_file(image_path)
-						pixbuf_pnj.composite(pixbuf, 0, 0, pixbuf_pnj.props.width, pixbuf_pnj.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
+						pixbuf_pnj.composite(pixbuf, 0, 0, pixbuf_pnj.props.width, pixbuf_pnj.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_NEAREST, 255)
 
 				# Si la case est un changement de zone, on modifie son apparence
 				if col.passage :
-					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_BILINEAR, 255)
+					pixbuf_passage.composite(pixbuf, 0, 0, pixbuf_passage.props.width, pixbuf_passage.props.height, 0, 0, 1.0, 1.0, gtk.gdk.INTERP_NEAREST, 255)
 
 				coord = str(col.x) + "," + str(col.y)
 				
