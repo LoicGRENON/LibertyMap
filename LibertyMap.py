@@ -95,7 +95,7 @@ class MainInterface :
 
 				# Menu clic droit
 				tooltip = self.grid.listStore.get_value(self.grid.listStore.get_iter(path), 2)
-				pattern = r"[0-9]*,[0-9]* \([0-9]* mins\) - vers Tour.*"
+				pattern = r"[0-9]*,[0-9]* - Tour - .*"
 
 				popup_menu = PopupMenu(self, True) if re.match(pattern, tooltip) else PopupMenu(self)
 				popup_menu = popup_menu.popup_menu
