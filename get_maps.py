@@ -4,8 +4,12 @@
 from lxml import etree	# For XML parsing
 import os
 import sys
-import urllib, urllib2
+import urllib2
+import urllib
+import urlparse
 import astar
+import shutil
+import gtk
 from common import ensure_dir, LM_CACHE_PATH
 
 def check_images(img_list) :
@@ -13,6 +17,9 @@ def check_images(img_list) :
 	for img in img_list :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
 		if not os.access(path, os.F_OK):
+			if os.name == "nt" :
+				# On remplace les \ du chemin windows par des / pour les URLs ...
+				img = '/'.join(img.split('\\'))
 			new_img.add(img)
 
 	return new_img
@@ -27,21 +34,33 @@ def download_images(img_list) :
 		print "Récupération de l'image '%s' vers %s" % (img_path, path)
 		try :
 			ensure_dir(path)
-			urllib.urlretrieve(img_path, path)
+			try :
+				src = urllib2.urlopen(img_path)
+			except urllib2.HTTPError :
+				pass
+			else :
+				dst = open(path, 'wb')
+				shutil.copyfileobj(src, dst)
 			print "Succès"
 		except :
 			(exctype, value, traceback) = sys.exc_info()
 			print "Erreur - %s : %s" % (exctype, value)
 
-def download_image(img) :
+def download_image(img, window=None) :
 	if os.name == "nt" :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
 	else :
 		path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
-	img_path = 'http://pirates-caraibes.com/' + img
+	img_path = 'http://www.pirates-caraibes.com/' + img
 	try :
 		ensure_dir(path)
-		urllib.urlretrieve(img_path, path)
+		try :
+			src = urllib2.urlopen(url_fix(img_path))
+		except urllib2.HTTPError :
+			return False
+		else :
+			dst = open(path, 'wb')
+			shutil.copyfileobj(src, dst)
 		return True
 	except :
 		return False
@@ -88,3 +107,22 @@ def get_map(xml_file) :
 
 	return (grid, img_list)
 
+def url_fix(s, charset='utf-8'):
+	# http://stackoverflow.com/questions/120951/how-can-i-normalize-a-url-in-python
+	"""Sometimes you get an URL by a user that just isn't a real
+	URL because it contains unsafe characters like ' ' and so on.  This
+	function can fix some of the problems in a similar way browsers
+	handle data entered by the user:
+
+	>>> url_fix(u'http://de.wikipedia.org/wiki/Elf (Begriffsklärung)')
+	'http://de.wikipedia.org/wiki/Elf%20%28Begriffskl%C3%A4rung%29'
+
+	:param charset: The target charset for the URL if the url was
+	                given as unicode string.
+	"""
+	if isinstance(s, unicode):
+		s = s.encode(charset, 'ignore')
+	scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
+	path = urllib.quote(path, '/%')
+	qs = urllib.quote_plus(qs, ':&=')
+	return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))

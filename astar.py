@@ -34,6 +34,10 @@ class Node :
 			self.time = 0
 			self.walkable = True
 
+		# Si le noeud courant est un PNJ, alors cette case est infranchissable
+		if self.img_pnj != None or self.pnj_name != None :
+			self.walkable = False
+
 		self.computeScore(nodeGoal)
 
 	def computeScore(self, nodeGoal, time_func=None) :

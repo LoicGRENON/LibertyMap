@@ -15,6 +15,10 @@ import urllib2
 import re
 import logging
 from common import *
+import imageshack
+from xml.dom.minidom import parseString
+
+IMAGESHACK_KEY = "78EKLMOX2a277897f3d75458ad44cbc3222d299a"
 
 class MainInterface :
 	window, menu, statusBar = None, None, None
@@ -210,37 +214,74 @@ class MainInterface :
 	def Prefs_cb(self, widget) :
 		PrefsInterface(self.window, self.config)
 		
-	def Scrot_cb(self, widget) :
-		file_chooser = gtk.FileChooserDialog("Capture du trajet", self.window, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-		file_chooser.set_do_overwrite_confirmation(True)
-		file_chooser.set_current_name("Trajet.png")
+	def Scrot_cb(self, widget, send=False) :
+		if send == False :
+			file_chooser = gtk.FileChooserDialog("Capture du trajet", self.window, gtk.FILE_CHOOSER_ACTION_SAVE, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+			file_chooser.set_do_overwrite_confirmation(True)
+			file_chooser.set_current_name("Trajet.png")
 
-		file_filter = gtk.FileFilter()
-		file_filter.set_name("PNG")
-		file_filter.add_mime_type("image/png")
-		file_filter.add_pattern("*.png")
-		file_chooser.add_filter(file_filter)
-		
-		file_filter = gtk.FileFilter()
-		file_filter.set_name("All files")
-		file_filter.add_pattern("*")
-		file_chooser.add_filter(file_filter)
-		
-		response = file_chooser.run()
-		result = ""
-		if response == gtk.RESPONSE_OK:
-			result = file_chooser.get_filename()
-		file_chooser.destroy()
-		
-		if result != "" :
-			filename, extension = os.path.splitext(result)
-			if not filename.endswith('.png') :
-				filename += '.png'
-		
+			file_filter = gtk.FileFilter()
+			file_filter.set_name("PNG")
+			file_filter.add_mime_type("image/png")
+			file_filter.add_pattern("*.png")
+			file_chooser.add_filter(file_filter)
+			
+			file_filter = gtk.FileFilter()
+			file_filter.set_name("All files")
+			file_filter.add_pattern("*")
+			file_chooser.add_filter(file_filter)
+			
+			response = file_chooser.run()
+			result = ""
+			if response == gtk.RESPONSE_OK:
+				result = file_chooser.get_filename()
+			file_chooser.destroy()
+			
+			if result != "" :
+				filename, extension = os.path.splitext(result)
+				if not filename.endswith('.png') :
+					filename += '.png'
+			
+				width, height = self.window.get_size()
+				pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, width, height)
+				screenshot = pixbuf.get_from_drawable(self.window.window, self.window.get_colormap(), 0, 0, 0, 0, width, height)
+				screenshot.save(filename, 'png')
+		else :
+			filename = LM_CACHE_PATH + "capture.png"
 			width, height = self.window.get_size()
 			pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, width, height)
 			screenshot = pixbuf.get_from_drawable(self.window.window, self.window.get_colormap(), 0, 0, 0, 0, width, height)
 			screenshot.save(filename, 'png')
+
+			link = ""
+			u = imageshack.Uploader(IMAGESHACK_KEY)
+			# context_id = self.status_bar.get_context_id("Capture")
+			# self.status.push(context_id, "Capture en cours ...")
+			try :
+				r = u.uploadFile(filename)
+				d = parseString(r)
+				try :
+					links = d.getElementsByTagName('image_link')
+					link = links[0].firstChild.nodeValue
+				finally :
+					d.unlink()
+			finally :
+				if link == "" :
+					# self.status.push(context_id, "Echec de la capture")
+					md = gtk.MessageDialog(self.window, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "Une erreur s'est produite lors de la capture.")
+					md.run()
+					md.destroy()
+				else :
+					# self.status.push(context_id, "Capture terminée")
+					clipboard = self.window.get_clipboard(gtk.gdk.SELECTION_CLIPBOARD)
+					clipboard.set_text(link)
+
+					msg = "Lien vers la capture : \n"
+					msg += link
+					msg += "\nCe lien a été copié dans le presse-papier."
+					md = gtk.MessageDialog(self.window, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO, gtk.BUTTONS_CLOSE, msg)
+					md.run()
+					md.destroy()
 
 	def compute_effective_time(self, time) :
 		if time == 0 :	# Si la case a un coût nul, il n'y a pas de réduction possible
@@ -336,6 +377,22 @@ class MainInterface :
 		getImage = self.getImages(new_img_list)
 		gobject.idle_add(getImage.next)
 
+	def getImage(self, img) :
+		if not get_maps.download_image(img, self.window) :
+			if os.name == "nt" :
+				path = LM_CACHE_PATH + os.sep + 'media' + os.sep + os.sep.join(img.split('/'))
+			else :
+				path = LM_CACHE_PATH + os.sep + 'media' + os.sep + img
+			img_path = 'http://www.pirates-caraibes.com/' + img
+			gtk.threads_enter()
+			self.logger.error("Echec de téléchargement de l'image %s" % img_path)
+			md = gtk.MessageDialog(self.window, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, gtk.BUTTONS_YES_NO, "Echec du téléchargement de l'image :\n"+img_path+"\nRéessayer ?")
+			response = md.run()
+			md.destroy()
+			gtk.gdk.threads_leave()
+			if response == gtk.RESPONSE_YES:
+				self.getImage(img)
+
 	def getImages(self, img_list) :
 		# http://faq.pygtk.org/index.py?req=show&file=faq23.020.htp
 		# http://stackoverflow.com/questions/8778587/is-there-a-way-to-continue-only-when-gobject-idle-add-function-terminate/8779184
@@ -344,10 +401,7 @@ class MainInterface :
 		i = 1.0
 		for img in img_list :
 			self.progress_interface.set_progress(i, nb_img)
-			gtk.gdk.threads_enter()
-			if not get_maps.download_image(img) :
-				self.logger.error("Echec de téléchargement de l'image %s" % img)
-			gtk.gdk.threads_leave()
+			self.getImage(img)
 			i += 1.0
 			yield True
 		self.progress_interface.progressbar_img.set_text("Les images sont à jour")
@@ -629,11 +683,23 @@ class ToolBarInterface :
 		clear_path_b.connect("clicked", data.ClearPath_cb)
 		self.tool_bar.insert(clear_path_b, 1)
 		
-		scrot_b = gtk.ToolButton(gtk.STOCK_SAVE_AS)
+		scrot_b = gtk.MenuToolButton(gtk.STOCK_SAVE_AS)
 		scrot_b.set_label("Capture")
 		scrot_b.set_tooltip_text("Prendre une capture d'écran")
 		scrot_b.connect("clicked", data.Scrot_cb)
 		self.tool_bar.insert(scrot_b, 2)
+
+		self.screenshotMenu = gtk.Menu()
+		popup_item = gtk.MenuItem("Capturer et enregistrer")
+		self.screenshotMenu.append(popup_item)
+		popup_item.connect("activate", data.Scrot_cb)
+		popup_item.show()
+
+		popup_item = gtk.MenuItem("Capturer et envoyer")
+		self.screenshotMenu.append(popup_item)
+		popup_item.connect("activate", data.Scrot_cb, True)
+		popup_item.show()
+		scrot_b.set_menu(self.screenshotMenu)
 
 		prefs_b = gtk.ToolButton(gtk.STOCK_PREFERENCES)
 		prefs_b.set_label("Préférences")

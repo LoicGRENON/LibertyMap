@@ -5,7 +5,7 @@ import os
 import sys
 
 APP_NAME        = u'LibertyMap'
-APP_VERSION     = u'1.0.2'
+APP_VERSION     = u'1.0.4b'
 # List of authors
 APP_AUTHORS     = [u'Loïc GRENON <difool@tuxfamily.org>']
 APP_YEAR        = u'2012'
